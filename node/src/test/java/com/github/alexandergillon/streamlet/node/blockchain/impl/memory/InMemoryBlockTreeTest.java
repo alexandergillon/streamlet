@@ -2,6 +2,7 @@ package com.github.alexandergillon.streamlet.node.blockchain.impl.memory;
 
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.AlreadyExistsException;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockTree;
 import org.junit.jupiter.api.RepeatedTest;
 
@@ -32,7 +33,7 @@ class InMemoryBlockTreeTest {
 
         for (int i = 0; i < NUM_CHILDREN; i++) {
             Block child = TestUtils.getRandomBlockWithParent(block.getHash());
-            blockTree.addChild(child);
+            assertDoesNotThrow(() -> blockTree.addChild(child));
             children.add(child);
         }
 
@@ -70,7 +71,7 @@ class InMemoryBlockTreeTest {
         int numChildren = ThreadLocalRandom.current().nextInt(3, 10);
         for (int i = 0; i < numChildren; i++) {
             Block child = TestUtils.getRandomBlockWithParent(rootBlock.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -78,7 +79,7 @@ class InMemoryBlockTreeTest {
         for (int i = 0; i < numToAdd; i++) {
             Block parent = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
             Block child = TestUtils.getRandomBlockWithParent(parent.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -103,6 +104,47 @@ class InMemoryBlockTreeTest {
         }
     }
 
+    // Tests that repeated addChild() throws correct exception
+    @RepeatedTest(20)
+    public void testRepeatedAddChild() {
+        Block parentBlock = TestUtils.getRandomBlock();
+        BlockTree parent = new InMemoryBlockTree(parentBlock, null);
+
+        Block child = TestUtils.getRandomBlockWithParent(parentBlock.getHash());
+        assertDoesNotThrow(() -> parent.addChild(child));
+        assertThrows(AlreadyExistsException.class, () -> parent.addChild(child));
+    }
+
+    // Tests that repeated insert() throws correct exception
+    @RepeatedTest(5)
+    public void testRepeatedInsertion() {
+        Block rootBlock = TestUtils.getRandomBlock();
+        BlockTree root = new InMemoryBlockTree(rootBlock, null);
+
+        ArrayList<Block> blocksAdded = new ArrayList<>();
+        blocksAdded.add(rootBlock);
+
+        int numChildren = ThreadLocalRandom.current().nextInt(3, 10);
+        for (int i = 0; i < numChildren; i++) {
+            Block child = TestUtils.getRandomBlockWithParent(rootBlock.getHash());
+            assertDoesNotThrow(() -> root.insert(child));
+            blocksAdded.add(child);
+        }
+
+        int numToAdd = ThreadLocalRandom.current().nextInt(100, 200);
+        for (int i = 0; i < numToAdd; i++) {
+            Block parent = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
+            Block child = TestUtils.getRandomBlockWithParent(parent.getHash());
+            assertDoesNotThrow(() -> root.insert(child));
+            blocksAdded.add(child);
+        }
+
+        for (int i = 0; i < 5; i++) {
+            Block alreadyInserted = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
+            assertThrows(AlreadyExistsException.class, () -> root.insert(alreadyInserted));
+        }
+    }
+
     // Tests that bad blocks throw an exception when inserted into the tree
     @RepeatedTest(5)
     public void testBadInsertion() {
@@ -115,7 +157,7 @@ class InMemoryBlockTreeTest {
         int numChildren = ThreadLocalRandom.current().nextInt(3, 10);
         for (int i = 0; i < numChildren; i++) {
             Block child = TestUtils.getRandomBlockWithParent(rootBlock.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -123,7 +165,7 @@ class InMemoryBlockTreeTest {
         for (int i = 0; i < numToAdd; i++) {
             Block parent = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
             Block child = TestUtils.getRandomBlockWithParent(parent.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -176,7 +218,7 @@ class InMemoryBlockTreeTest {
         int numChildren = ThreadLocalRandom.current().nextInt(3, 10);
         for (int i = 0; i < numChildren; i++) {
             Block child = TestUtils.getRandomBlockWithParent(rootBlock.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -184,7 +226,7 @@ class InMemoryBlockTreeTest {
         for (int i = 0; i < numToAdd; i++) {
             Block parent = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
             Block child = TestUtils.getRandomBlockWithParent(parent.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -215,7 +257,7 @@ class InMemoryBlockTreeTest {
         int numChildren = ThreadLocalRandom.current().nextInt(3, 10);
         for (int i = 0; i < numChildren; i++) {
             Block child = TestUtils.getRandomBlockWithParent(rootBlock.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 
@@ -223,7 +265,7 @@ class InMemoryBlockTreeTest {
         for (int i = 0; i < numToAdd; i++) {
             Block parent = blocksAdded.get(ThreadLocalRandom.current().nextInt(0, blocksAdded.size()));
             Block child = TestUtils.getRandomBlockWithParent(parent.getHash());
-            root.insert(child);
+            assertDoesNotThrow(() -> root.insert(child));
             blocksAdded.add(child);
         }
 

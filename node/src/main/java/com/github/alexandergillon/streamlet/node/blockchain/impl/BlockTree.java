@@ -1,6 +1,7 @@
 package com.github.alexandergillon.streamlet.node.blockchain.impl;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.AlreadyExistsException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -28,7 +29,7 @@ public interface BlockTree {
      * @return The new node, containing that child as data.
      * @throws IllegalArgumentException If the parent hash of the child to be added does not match this node's hash.
      */
-    BlockTree addChild(Block block) throws IllegalArgumentException;
+    BlockTree addChild(Block block) throws IllegalArgumentException, AlreadyExistsException;
 
     /**
      * Finds a block in this tree, if it exists.
@@ -53,7 +54,7 @@ public interface BlockTree {
      * @return The new node, containing the inserted block as data.
      * @throws NoSuchElementException If the block's parent does not exist in the tree.
      */
-    BlockTree insert(Block block) throws NoSuchElementException;
+    BlockTree insert(Block block) throws NoSuchElementException, AlreadyExistsException;
 
     /**
      * Votes on this block.

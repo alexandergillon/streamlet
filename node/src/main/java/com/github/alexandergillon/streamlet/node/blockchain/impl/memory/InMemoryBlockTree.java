@@ -1,6 +1,7 @@
 package com.github.alexandergillon.streamlet.node.blockchain.impl.memory;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.AlreadyExistsException;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockInfo;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockTree;
 
@@ -46,8 +47,9 @@ public class InMemoryBlockTree implements BlockTree {
     }
 
     @Override
-    public BlockTree addChild(Block block) throws IllegalArgumentException {
+    public BlockTree addChild(Block block) throws IllegalArgumentException, AlreadyExistsException {
         if (!Arrays.equals(block.getParentHash(), blockInfo.getHash())) throw new IllegalArgumentException("Parent hash of child to add does not match this node's hash.");
+        if (containsBlock(children, block)) throw new AlreadyExistsException("Block already exists as a child of this node.");
         InMemoryBlockTree child = new InMemoryBlockTree(block, this);
         children.add(child);
         return child;
@@ -75,7 +77,7 @@ public class InMemoryBlockTree implements BlockTree {
     }
 
     @Override
-    public BlockTree insert(Block block) throws NoSuchElementException {
+    public BlockTree insert(Block block) throws NoSuchElementException, AlreadyExistsException {
         BlockTree parent = findByHash(block.getParentHash());
         if (parent == null) throw new NoSuchElementException("Parent block does not exist in tree.");
         return parent.addChild(block);
@@ -103,5 +105,22 @@ public class InMemoryBlockTree implements BlockTree {
         BlockTree blockTree = find(block);
         if (blockTree == null) throw new NoSuchElementException("Block does not exist in tree.");
         return blockTree.getVotes();
+    }
+
+    /**
+     * Checks whether a block is present in a list of nodes.
+     *
+     * @param list The list of nodes to check.
+     * @param block A block to search for.
+     * @return Whether that block is contained as data in some node in the list.
+     */
+    private static boolean containsBlock(List<? extends BlockTree> list, Block block) {
+        for (BlockTree blockTree : list) {
+            if (blockTree.getBlockInfo().getBlock().equals(block)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
