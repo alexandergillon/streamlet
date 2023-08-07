@@ -116,7 +116,7 @@ class InMemoryBlockTreeTest {
     }
 
     // Tests that repeated insert() throws correct exception
-    @RepeatedTest(5)
+    @RepeatedTest(10)
     public void testRepeatedInsertion() {
         Block rootBlock = TestUtils.getRandomBlock();
         BlockTree root = new InMemoryBlockTree(rootBlock, null);

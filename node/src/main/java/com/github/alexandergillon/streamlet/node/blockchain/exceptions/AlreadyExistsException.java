@@ -1,22 +1,21 @@
 package com.github.alexandergillon.streamlet.node.blockchain.exceptions;
 
+import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockTree;
+import lombok.Getter;
+
 /** Exception thrown when a block that already exists in the blockchain is inserted into the tree. */
 public class AlreadyExistsException extends Exception {
 
-    public AlreadyExistsException() {
-        super();
-    }
+    /** The already existing node in the block tree, which prevented the block from being inserted. */
+    @Getter
+    private final BlockTree existingNode;
 
-    public AlreadyExistsException(String message) {
+    /**
+     * @param existingNode The already existing node in the block tree
+     * @param message Exception message.
+     */
+    public AlreadyExistsException(BlockTree existingNode, String message) {
         super(message);
+        this.existingNode = existingNode;
     }
-
-    public AlreadyExistsException(String message, Throwable cause) {
-        super(message, cause);
-    }
-
-    public AlreadyExistsException(Throwable cause) {
-        super(cause);
-    }
-
 }

@@ -83,4 +83,11 @@ public interface BlockTree {
      */
     int getVotesOnBlock(Block block) throws NoSuchElementException;
 
+    /** @return The length of the notarized chain that this node is a part of (may be 0, if this node is not
+     * part of a notarized chain). */
+    int getNotarizedChainLength();
+
+    /** @return The length of the longest notarized chain in the tree. */
+    int getLongestNotarizedChainLength();
+
 }

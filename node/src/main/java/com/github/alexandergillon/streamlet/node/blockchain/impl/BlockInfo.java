@@ -69,8 +69,12 @@ public class BlockInfo {
         return notarized;
     }
 
-    /** Finalizes this block. This isn't called {@code finalize()} as this method is already implemented by {@code Object}.*/
+    /**
+     * Finalizes this block. Also notarizes it, as finalization implies notarization. This isn't called
+     * {@code finalize()} as this method is already implemented by {@code Object}.
+     */
     public void finalizeBlock() {
+        notarized = true;
         finalized = true;
     }
 

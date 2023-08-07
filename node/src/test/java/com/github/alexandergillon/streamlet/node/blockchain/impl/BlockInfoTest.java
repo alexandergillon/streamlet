@@ -68,11 +68,7 @@ class BlockInfoTest {
 
         blockInfo2.finalizeBlock();
 
-        assertFalse(blockInfo2.isNotarized());
-        assertTrue(blockInfo2.isFinalized());
-
-        blockInfo2.notarize();
-
+        // finalization implies notarization
         assertTrue(blockInfo2.isNotarized());
         assertTrue(blockInfo2.isFinalized());
     }

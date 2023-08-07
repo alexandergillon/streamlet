@@ -15,6 +15,9 @@ import java.util.Base64;
 @Getter
 public class Block {
 
+    /** Length of a SHA256 hash in bytes. SHA256 is 256 bits. */
+    public static final int SHA_256_HASH_LENGTH_BYTES = 256 / 8;
+
     /** Hash of the parent block in the blockchain. */
     private final byte[] parentHash;
     /** Epoch number of this block. */
@@ -24,8 +27,13 @@ public class Block {
     /** SHA256 hash of the block. */
     private final byte[] hash;
 
-    /** Constructor. */
-    public Block(byte[] parentHash, int epoch, byte[] payload) {
+    /**
+     * Constructor.
+     *
+     * @throws IllegalArgumentException If the parent hash is not a SHA256 hash.
+     */
+    public Block(byte[] parentHash, int epoch, byte[] payload) throws IllegalArgumentException {
+        if (parentHash.length != SHA_256_HASH_LENGTH_BYTES) throw new IllegalArgumentException("Parent hash of block being constructed is not SHA256.");
         this.parentHash = parentHash.clone();
         this.epoch = epoch;
         this.payload = payload.clone();
@@ -34,7 +42,7 @@ public class Block {
     }
 
     /** The genesis block. */
-    public static final Block GENESIS_BLOCK = new Block(new byte[0], 0, new byte[0]);
+    public static final Block GENESIS_BLOCK = new Block(new byte[SHA_256_HASH_LENGTH_BYTES], 0, new byte[0]);
 
     /**
      * Serializes this block, in the following format:                    <pre>

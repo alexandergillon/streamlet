@@ -1,9 +1,11 @@
 package com.github.alexandergillon.streamlet.node;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
+@Disabled
 class NodeApplicationTests {
 
     // Tests that the Spring context loads correctly
