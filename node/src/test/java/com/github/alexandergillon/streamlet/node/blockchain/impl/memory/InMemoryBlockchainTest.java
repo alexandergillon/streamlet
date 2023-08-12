@@ -3,6 +3,7 @@ package com.github.alexandergillon.streamlet.node.blockchain.impl.memory;
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import com.github.alexandergillon.streamlet.node.blockchain.Blockchain;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.InvalidBlockException;
 import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBlockException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -30,16 +31,16 @@ class InMemoryBlockchainTest {
      * 6                    6
      *                      |
      * 7                    7
-     *              /----/--|--\----\---------------\------\
-     * 8           8    9   10  11   12             26     |
-     *             |    |   |   |     \-----\        |     |
-     * 9          13   14   |  16     17    20       |     27
-     *             |    |   |   |       \            |     |
-     * 10         18   19   15  21      22           28    |
-     *                                /----\         |     |
-     * 11                            23    24        |     29
-     *                                               |     |
-     * 12                                            |     33
+     *              /----/--|--\----\---------------\------\-----\
+     * 8           8    9   10  11   12             26     |     |
+     *             |    |   |   |     \-----\        |     |     |
+     * 9          13   14   |  16     17    20       |     27    |
+     *             |    |   |   |       \            |     |     |
+     * 10         18   19   15  21      22           28    |     |
+     *                                /----\         |     |     |
+     * 11                            23    24        |     29    |
+     *                                               |     |     |
+     * 12                                            |     33    34
      *                                               |
      * 13                                            30
      *                                               |
@@ -51,7 +52,7 @@ class InMemoryBlockchainTest {
     private List<Block> blocks;
 
     // Trace for the first 7 blocks proceeding ideally. With a notarization threshold of 4, all but the last block
-    // should be notarized
+    // should be finalized, and all should be notarized
     private static final String first7BlocksIdealNetworkNotarizationThreshold4 =
         """
         e1:
@@ -126,12 +127,13 @@ class InMemoryBlockchainTest {
         Block block31 = new Block(block30.getHash(), 14, randomPayload());
         Block block32 = new Block(block31.getHash(), 15, randomPayload());
         Block block33 = new Block(block29.getHash(), 12, randomPayload());
+        Block block34 = new Block(block7.getHash(), 12, randomPayload());
 
         blocks = new ArrayList<>(Arrays.asList(Block.GENESIS_BLOCK, block1, block2, block3, block4, block5, block6, block7, block8,
                 block9, block10, block11, block12, block13, block14, block15, block16, block17, block18, block19,
                 block20, block21, block22, block23, block24,
                 Block.GENESIS_BLOCK, // for padding, will be overwritten later
-                block26, block27, block28, block29, block30, block31, block32, block33));
+                block26, block27, block28, block29, block30, block31, block32, block33, block34));
 
         byte[] hashNotInBlocks = new byte[TestUtils.SHA_256_HASH_LENGTH_BYTES];
         ThreadLocalRandom.current().nextBytes(hashNotInBlocks);
@@ -244,6 +246,43 @@ class InMemoryBlockchainTest {
         List<Block> expectedFinalizedChain = List.of(blocks.get(0), blocks.get(1), blocks.get(2), blocks.get(3),
                 blocks.get(4), blocks.get(5), blocks.get(6));
         assertEquals(expectedFinalizedChain, blockchain.getFinalizedChain());
+    }
+
+    // Tests that the return value of Blockchain.processProposedBlock() is correct
+    @Test
+    public void testReturnValues() throws InvalidBlockException, UnknownBlockException {
+        // valid proposal, should vote
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        assertTrue(blockchain.processProposedBlock(blocks.get(1), 1, 1, true));
+
+        // not first proposal of epoch, shouldn't vote
+        blockchain = new InMemoryBlockchain(0, 4);
+        assertFalse(blockchain.processProposedBlock(blocks.get(1), 1, 1, false));
+
+        // proposal is from previous epoch, shouldn't vote
+        blockchain = new InMemoryBlockchain(0, 4);
+        assertFalse(blockchain.processProposedBlock(blocks.get(1), 1, 2, true));
+
+        // proposal does not extend longest notarized chain
+        blockchain = new InMemoryBlockchain(0, 4);
+        doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
+        // This setup gets blocks 11 and 16 notarized
+        String moreSetup =
+            """
+            e8:
+            n1 propose b11
+            n2 vote b11
+            n3 vote b11
+            assert notarized b11
+            
+            e9:
+            n1 propose b16
+            n2 vote b16
+            n3 vote b16
+            assert notarized b16
+            """;
+        doTest(moreSetup, blockchain);
+        assertFalse(blockchain.processProposedBlock(blocks.get(34), 4, 12, true));
     }
 
     // Tests that blocks are not finalized if the three notarized blocks in a row are not of consecutive epochs
@@ -674,7 +713,7 @@ class InMemoryBlockchainTest {
         assertThrows(UnknownBlockException.class, () -> blockchain.processBlockVote(blocks.get(25), 1));
     }
 
-    // Tests that correct exceptions are thrown when a bad propose occurs
+    // Tests that correct exceptions are thrown when a bad vote occurs
     @Test
     public void testBadVote() {
         Blockchain blockchain = new InMemoryBlockchain(0, 4);
