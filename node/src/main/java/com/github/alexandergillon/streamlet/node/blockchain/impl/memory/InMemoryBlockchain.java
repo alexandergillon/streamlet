@@ -45,6 +45,8 @@ public class InMemoryBlockchain implements Blockchain {
         if (block.getEpoch() < 0) throw new InvalidBlockException("Epoch of block is < 0.");
         else if (block.getEpoch() > currentEpoch) throw new InvalidBlockException("Epoch of block (" + block.getEpoch() + ") is greater than current epoch (" + currentEpoch + ").");
 
+        if (block.getEpoch() <= parent.getBlockInfo().getEpoch()) throw new InvalidBlockException("Epoch of block (" + block.getEpoch() + ") is less than or equal to epoch of parent (" + parent.getBlockInfo().getEpoch() + ").");
+
         if (block.getEpoch() != currentEpoch) {
             insertIntoTree(block, parent, proposer, false);
             return false;

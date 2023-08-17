@@ -1,6 +1,7 @@
 package com.github.alexandergillon.streamlet.node.models;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import lombok.ToString;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 @ToString
 public class ProposeMessage {
 

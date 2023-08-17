@@ -6,6 +6,7 @@ import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBl
 import java.util.List;
 import java.util.NoSuchElementException;
 
+/** Interface to be implemented by a blockchain which implements the Streamlet protocol. */
 public interface Blockchain {
 
     /**
@@ -16,9 +17,10 @@ public interface Blockchain {
      * @param proposer      The node who proposed the block.
      * @param currentEpoch  The current epoch.
      * @param firstProposal Whether this proposed block is the first proposal from this proposer in this epoch.
-     * @return Whether this node in the network should vote on this block.
-     * @throws InvalidBlockException If the block is invalid. Note - there is no guarantee that this exception will be
-     * thrown in a block is invalid. Only that if this exception is thrown, the block is invalid.
+     * @return Whether this node in the network should vote on this block, according to the Streamlet protocol.
+     * @throws InvalidBlockException If the block is invalid. This exception is always thrown if the proposed block
+     * has an epoch less than or equal to its parent's epoch. This exception may also be thrown if the block is invalid
+     * in some other way, but there is no guarantee that this exception will always be thrown in a block is invalid.
      * @throws UnknownBlockException If the block's parent is not found in the tree.
      */
     boolean processProposedBlock(Block block, int proposer, int currentEpoch, boolean firstProposal) throws InvalidBlockException, UnknownBlockException;

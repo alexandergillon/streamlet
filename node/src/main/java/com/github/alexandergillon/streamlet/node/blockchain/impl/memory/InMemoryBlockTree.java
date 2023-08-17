@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
 
-/** Implementation of a tree data structure, with a {@link BlockInfo} as the data at each node. */
+/** Implementation of a tree data structure in memory, with a {@link BlockInfo} as the data at each node. */
 public class InMemoryBlockTree implements BlockTree {
 
     /** The data stored at this node. */

@@ -1,11 +1,11 @@
 package com.github.alexandergillon.streamlet.node.blockchain;
 
-import lombok.*;
+import com.github.alexandergillon.streamlet.node.models.JsonBlock;
+import com.github.alexandergillon.streamlet.node.util.SerializationUtils;
+import lombok.Getter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -18,7 +18,7 @@ public class Block {
     /** Length of a SHA256 hash in bytes. SHA256 is 256 bits. */
     public static final int SHA_256_HASH_LENGTH_BYTES = 256 / 8;
 
-    /** Hash of the parent block in the blockchain. */
+    /** SHA256 hash of the parent block in the blockchain. */
     private final byte[] parentHash;
     /** Epoch number of this block. */
     private final int epoch;
@@ -58,13 +58,18 @@ public class Block {
         try {
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             outputStream.write(parentHash);
-            outputStream.write(intTo4BytesBigEndian(epoch));
-            outputStream.write(intTo4BytesBigEndian(payload.length));
+            outputStream.write(SerializationUtils.intToFourBytesBigEndian(epoch));
+            outputStream.write(SerializationUtils.intToFourBytesBigEndian(payload.length));
             outputStream.write(payload);
             return outputStream.toByteArray();
         } catch (IOException e) {
-            throw new IllegalStateException("ByteArrayOutputStream cannot throw IOException.");
+            throw new IllegalStateException("ByteArrayOutputStream cannot throw IOException.", e);
         }
+    }
+
+    /** @return This block, as a {@link JsonBlock}. */
+    public JsonBlock toJsonBlock() {
+        return new JsonBlock(getParentHashBase64(), epoch, getPayloadBase64());
     }
 
     /** @return The parent hash of this block, as a base-64 encoded string. */
@@ -91,16 +96,6 @@ public class Block {
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("No SHA-256 algorithm provider.");
         }
-    }
-
-    /**
-     * Converts an integer to 4 bytes, in big-endian order.
-     *
-     * @param i Integer to convert.
-     * @return That integer as 4 bytes in big-endian order.
-     */
-    private static byte[] intTo4BytesBigEndian(int i) {
-        return ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putInt(i).array();
     }
 
     /**
