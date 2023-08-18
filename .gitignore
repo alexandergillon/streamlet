@@ -32,4 +32,5 @@ build/
 
 ### Secrets ###
 node/src/main/resources/secrets.properties
+node/src/main/resources/application-unittests.properties
 node/src/main/resources/keystore
