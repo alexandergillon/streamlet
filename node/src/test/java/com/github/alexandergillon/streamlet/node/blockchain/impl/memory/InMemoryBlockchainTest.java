@@ -95,39 +95,39 @@ class InMemoryBlockchainTest {
     // Sets up the test blocks. See diagram above.
     @BeforeEach
     public void setupBlocks() {
-        Block block1 = new Block(Block.GENESIS_BLOCK.getHash(), 1, randomPayload());
-        Block block2 = new Block(block1.getHash(), 2, randomPayload());
-        Block block3 = new Block(block2.getHash(), 3, randomPayload());
-        Block block4 = new Block(block3.getHash(), 4, randomPayload());
-        Block block5 = new Block(block4.getHash(), 5, randomPayload());
-        Block block6 = new Block(block5.getHash(), 6, randomPayload());
-        Block block7 = new Block(block6.getHash(), 7, randomPayload());
-        Block block8 = new Block(block7.getHash(), 8, randomPayload());
-        Block block9 = new Block(block7.getHash(), 8, randomPayload());
-        Block block10 = new Block(block7.getHash(), 8, randomPayload());
-        Block block11 = new Block(block7.getHash(), 8, randomPayload());
-        Block block12 = new Block(block7.getHash(), 8, randomPayload());
-        Block block13 = new Block(block8.getHash(), 9, randomPayload());
-        Block block14 = new Block(block9.getHash(), 9, randomPayload());
-        Block block15 = new Block(block10.getHash(), 10, randomPayload());
-        Block block16 = new Block(block11.getHash(), 9, randomPayload());
-        Block block17 = new Block(block12.getHash(), 9, randomPayload());
-        Block block18 = new Block(block13.getHash(), 10, randomPayload());
-        Block block19 = new Block(block14.getHash(), 10, randomPayload());
-        Block block20 = new Block(block12.getHash(), 9, randomPayload());
-        Block block21 = new Block(block16.getHash(), 10, randomPayload());
-        Block block22 = new Block(block17.getHash(), 10, randomPayload());
-        Block block23 = new Block(block22.getHash(), 11, randomPayload());
-        Block block24 = new Block(block22.getHash(), 11, randomPayload());
-        Block block26 = new Block(block7.getHash(), 8, randomPayload());
-        Block block27 = new Block(block7.getHash(), 9, randomPayload());
-        Block block28 = new Block(block26.getHash(), 10, randomPayload());
-        Block block29 = new Block(block27.getHash(), 11, randomPayload());
-        Block block30 = new Block(block28.getHash(), 13, randomPayload());
-        Block block31 = new Block(block30.getHash(), 14, randomPayload());
-        Block block32 = new Block(block31.getHash(), 15, randomPayload());
-        Block block33 = new Block(block29.getHash(), 12, randomPayload());
-        Block block34 = new Block(block7.getHash(), 12, randomPayload());
+        Block block1 = new Block(Block.GENESIS_BLOCK.getHash(), 1, TestUtils.randomPayload());
+        Block block2 = new Block(block1.getHash(), 2, TestUtils.randomPayload());
+        Block block3 = new Block(block2.getHash(), 3, TestUtils.randomPayload());
+        Block block4 = new Block(block3.getHash(), 4, TestUtils.randomPayload());
+        Block block5 = new Block(block4.getHash(), 5, TestUtils.randomPayload());
+        Block block6 = new Block(block5.getHash(), 6, TestUtils.randomPayload());
+        Block block7 = new Block(block6.getHash(), 7, TestUtils.randomPayload());
+        Block block8 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block9 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block10 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block11 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block12 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block13 = new Block(block8.getHash(), 9, TestUtils.randomPayload());
+        Block block14 = new Block(block9.getHash(), 9, TestUtils.randomPayload());
+        Block block15 = new Block(block10.getHash(), 10, TestUtils.randomPayload());
+        Block block16 = new Block(block11.getHash(), 9, TestUtils.randomPayload());
+        Block block17 = new Block(block12.getHash(), 9, TestUtils.randomPayload());
+        Block block18 = new Block(block13.getHash(), 10, TestUtils.randomPayload());
+        Block block19 = new Block(block14.getHash(), 10, TestUtils.randomPayload());
+        Block block20 = new Block(block12.getHash(), 9, TestUtils.randomPayload());
+        Block block21 = new Block(block16.getHash(), 10, TestUtils.randomPayload());
+        Block block22 = new Block(block17.getHash(), 10, TestUtils.randomPayload());
+        Block block23 = new Block(block22.getHash(), 11, TestUtils.randomPayload());
+        Block block24 = new Block(block22.getHash(), 11, TestUtils.randomPayload());
+        Block block26 = new Block(block7.getHash(), 8, TestUtils.randomPayload());
+        Block block27 = new Block(block7.getHash(), 9, TestUtils.randomPayload());
+        Block block28 = new Block(block26.getHash(), 10, TestUtils.randomPayload());
+        Block block29 = new Block(block27.getHash(), 11, TestUtils.randomPayload());
+        Block block30 = new Block(block28.getHash(), 13, TestUtils.randomPayload());
+        Block block31 = new Block(block30.getHash(), 14, TestUtils.randomPayload());
+        Block block32 = new Block(block31.getHash(), 15, TestUtils.randomPayload());
+        Block block33 = new Block(block29.getHash(), 12, TestUtils.randomPayload());
+        Block block34 = new Block(block7.getHash(), 12, TestUtils.randomPayload());
 
         blocks = new ArrayList<>(Arrays.asList(Block.GENESIS_BLOCK, block1, block2, block3, block4, block5, block6, block7, block8,
                 block9, block10, block11, block12, block13, block14, block15, block16, block17, block18, block19,
@@ -147,7 +147,7 @@ class InMemoryBlockchainTest {
             break;
         }
 
-        Block block25 = new Block(hashNotInBlocks, 100, randomPayload());
+        Block block25 = new Block(hashNotInBlocks, 100, TestUtils.randomPayload());
         blocks.set(25, block25);
     }
 
@@ -704,6 +704,110 @@ class InMemoryBlockchainTest {
         doTest(test, blockchain);
     }
 
+    // Tests that if a node misses a proposal but gets all the votes on that proposal, a block is still notarized
+    @Test
+    public void testMissedProposalMessages() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        String test =
+                """
+                e1:
+                n1 vote b1
+                assert contains b1
+                assert !notarized b1
+                n2 vote b1
+                n0 vote b1
+                assert !notarized b1
+                n3 vote b1
+                assert notarized b1
+                
+                e2:
+                n1 vote b2
+                assert contains b2
+                assert !notarized b2
+                n2 vote b2
+                n0 vote b2
+                assert !notarized b2
+                assert !finalized b1
+                n3 vote b2
+                assert notarized b2
+                assert finalized b1
+                
+                e3:
+                n1 vote b3
+                assert contains b3
+                assert !notarized b3
+                n2 vote b3
+                n0 vote b3
+                assert !notarized b3
+                assert !finalized b2
+                n3 vote b3
+                assert notarized b3
+                assert finalized b2
+                
+                e4:
+                n1 vote b4
+                assert contains b4
+                assert !notarized b4
+                n2 vote b4
+                n0 vote b4
+                assert !notarized b4
+                assert !finalized b3
+                n3 vote b4
+                assert notarized b4
+                assert finalized b3
+                
+                e5:
+                n1 vote b5
+                assert contains b5
+                assert !notarized b5
+                n2 vote b5
+                n0 vote b5
+                assert !notarized b5
+                assert !finalized b4
+                n3 vote b5
+                assert notarized b5
+                assert finalized b4
+                
+                e6:
+                n1 vote b6
+                assert contains b6
+                assert !notarized b6
+                n2 vote b6
+                n0 vote b6
+                assert !notarized b6
+                assert !finalized b5
+                n3 vote b6
+                assert notarized b6
+                assert finalized b5
+                
+                e7:
+                n1 vote b7
+                assert contains b7
+                assert !notarized b7
+                n2 vote b7
+                n0 vote b7
+                assert !notarized b7
+                assert !finalized b6
+                n3 vote b7
+                assert notarized b7
+                assert finalized b6
+                
+                assert parent b1 b0
+                assert parent b2 b1
+                assert parent b3 b2
+                assert parent b4 b3
+                assert parent b5 b4
+                assert parent b6 b5
+                assert parent b7 b6
+                """;
+
+        doTest(test, blockchain);
+
+        List<Block> expectedFinalizedChain = List.of(blocks.get(0), blocks.get(1), blocks.get(2), blocks.get(3),
+                blocks.get(4), blocks.get(5), blocks.get(6));
+        assertEquals(expectedFinalizedChain, blockchain.getFinalizedChain());
+    }
+
     // Tests that correct exceptions are thrown when a bad propose occurs
     @Test
     public void testBadPropose() {
@@ -777,9 +881,4 @@ class InMemoryBlockchainTest {
         }
     }
 
-    private static byte[] randomPayload() {
-        byte[] payload = new byte[ThreadLocalRandom.current().nextInt(2048, 4096)];
-        ThreadLocalRandom.current().nextBytes(payload);
-        return payload;
-    }
 }

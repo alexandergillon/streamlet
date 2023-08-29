@@ -44,4 +44,19 @@ public class TestUtils {
         return new Block(parentHash, epoch, payload);
     }
 
+    // Gets a random block, with a specific parent hash and specific epoch
+    public static Block getRandomBlockWithParentAndEpoch(Block parent, int epoch) {
+        if (parent.getHash().length != SHA_256_HASH_LENGTH_BYTES) throw new IllegalArgumentException("Parent hash is not SHA256.");
+        int payloadSize = ThreadLocalRandom.current().nextInt(0, 4096);
+        byte[] payload = new byte[payloadSize];
+        ThreadLocalRandom.current().nextBytes(payload);
+
+        return new Block(parent.getHash(), epoch, payload);
+    }
+
+    public static byte[] randomPayload() {
+        byte[] payload = new byte[ThreadLocalRandom.current().nextInt(2048, 4096)];
+        ThreadLocalRandom.current().nextBytes(payload);
+        return payload;
+    }
 }
