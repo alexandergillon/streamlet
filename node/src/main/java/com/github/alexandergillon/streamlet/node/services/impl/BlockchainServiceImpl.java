@@ -1,0 +1,172 @@
+package com.github.alexandergillon.streamlet.node.services.impl;
+
+import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.blockchain.Blockchain;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.InvalidBlockException;
+import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBlockException;
+import com.github.alexandergillon.streamlet.node.blockchain.impl.memory.InMemoryBlockchain;
+import com.github.alexandergillon.streamlet.node.services.BlockchainService;
+import com.github.alexandergillon.streamlet.node.services.CryptographyService;
+import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/** Implementation of a {@link BlockchainService}. */
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class BlockchainServiceImpl implements BlockchainService {
+
+    // Constants from Spring properties
+    @Value("${streamlet.node.id}")
+    private int nodeId;
+    @Value("${streamlet.participants}")
+    private int numNodes;
+    @Value("${streamlet.notarization.threshold}")
+    private double notarizationProportion;
+
+    // Autowired dependencies (via RequiredArgsConstructor)
+    private final CryptographyService cryptographyService;
+
+    // Member variables
+    private int currentEpoch = 0;
+    private boolean firstProposalForEpoch = true;
+    private Blockchain blockchain;
+
+    /**
+     * We need constants from Spring properties to instantiate the blockchain, so we do it
+     * in a {@link PostConstruct}.
+     */
+    @PostConstruct
+    private void initializeBlockchain() {
+        blockchain = new InMemoryBlockchain(nodeId, (int)Math.ceil(numNodes * notarizationProportion));
+    }
+
+    @Override
+    public void setEpoch(int epoch) {
+        if (epoch <= currentEpoch) throw new IllegalArgumentException("Epoch " + epoch + " is less than current epoch of " + currentEpoch);
+        currentEpoch = epoch;
+        firstProposalForEpoch = true;
+    }
+
+    @Override
+    public boolean processProposedBlock(Block block, int proposer, byte[] signature) {
+        // If the block is invalid, we discard it and return false
+        if (!validateProposedBlock(block, proposer, signature)) return false;
+
+        try {
+            boolean votedOnBlock = blockchain.processProposedBlock(block, proposer, currentEpoch, firstProposalForEpoch);
+            firstProposalForEpoch = false;
+            return votedOnBlock;
+        } catch (InvalidBlockException e) {
+            log.warn("Received invalid block.", e);
+            return false;
+        } catch (UnknownBlockException e) {
+            // TODO: handle orphaned blocks
+            log.error("Unknown block.", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public void processBlockVote(Block block, int voterId, byte[] signature, byte[] proposerSignature) {
+        // If the block is invalid, we discard it
+        if (!validateVote(block, voterId, signature, proposerSignature)) return;
+
+        try {
+            blockchain.processBlockVote(block, voterId);
+        } catch (InvalidBlockException e) {
+            log.warn("Received invalid block.", e);
+        } catch (UnknownBlockException e) {
+            // TODO: handle orphaned blocks
+            log.error("Unknown block.", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public List<Block> getFinalizedChain() {
+        return blockchain.getFinalizedChain();
+    }
+
+    /**
+     * Performs a number of validations on a proposed block. For example, that the epoch is valid, signature
+     * is valid, etc.
+     *
+     * @param block The block to validate.
+     * @param proposer The proposer of the block.
+     * @param signature The signature of the proposer on the block.
+     * @return Whether the block is valid.
+     */
+    private boolean validateProposedBlock(Block block, int proposer, byte[] signature) {
+        int leader = cryptographyService.leaderForEpoch(block.getEpoch());
+        if (proposer != leader) {
+            log.warn("Received proposed block from node {}, but node {} is leader for the block's epoch: {}", proposer, leader, block);
+            return false;
+        }
+
+        if (!cryptographyService.validateProposal(block, signature)) {
+            log.warn("Received proposed block whose signature could not be validated: {}", block);
+            return false;
+        }
+
+        if (block.getEpoch() < 0 || block.getEpoch() > currentEpoch) {
+            log.warn("Received proposed block with invalid epoch {}, current epoch {}: {}",  block.getEpoch(), currentEpoch, block);
+            return false;
+        }
+
+        if (block.getParentHash().length != Block.SHA_256_HASH_LENGTH_BYTES) {
+            log.warn("Received proposed block with parent invalid hash length {}: {}",  block.getParentHash().length, block);
+            return false;
+        }
+
+        if (block.getPayload().length == 0) {
+            log.warn("Received block with empty payload: {}", block);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Performs a number of validations on a vote. For example, that the epoch is valid, signature is valid, etc.
+     *
+     * @param block The voted-on block.
+     * @param voterId ID of the node who voted on the block.
+     * @param signature The digital signature of the voter on the block.
+     * @param proposerSignature The digital signature of the original proposer on the block.
+     * @return Whether the vote is valid.
+     */
+    private boolean validateVote(Block block, int voterId, byte[] signature, byte[] proposerSignature) {
+        if (!cryptographyService.validateVote(block, voterId, signature)) {
+            log.warn("Received vote on block whose signature could not be validated: {}", block);
+            return false;
+        }
+
+        if (!cryptographyService.validateProposal(block, proposerSignature)) {
+            log.warn("Received vote on block whose proposer signature could not be validated: {}", block);
+            return false;
+        }
+
+        if (block.getEpoch() < 0 || block.getEpoch() > currentEpoch) {
+            log.warn("Received vote on block with invalid epoch {}, current epoch {}: {}",  block.getEpoch(), currentEpoch, block);
+            return false;
+        }
+
+        if (block.getParentHash().length != Block.SHA_256_HASH_LENGTH_BYTES) {
+            log.warn("Received vote on block with parent invalid hash length {}: {}",  block.getParentHash().length, block);
+            return false;
+        }
+
+        if (block.getPayload().length == 0) {
+            log.warn("Received vote on block with empty payload: {}", block);
+            return false;
+        }
+
+        return true;
+    }
+}
