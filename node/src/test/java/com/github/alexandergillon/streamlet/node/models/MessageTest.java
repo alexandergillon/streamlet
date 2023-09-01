@@ -43,6 +43,7 @@ class MessageTest {
         assertEquals(message3, message4);
     }
 
+    // Tests that messages are correctly converted to a string
     @RepeatedTest(50)
     public void testToString() {
         long timestamp = dateStringToMillisRandomOffsetUTC("2013/03/17 18:34");
@@ -51,6 +52,7 @@ class MessageTest {
         assertEquals(message.toString(), "2013/03/17 18:34 | sdnjajhu3yuy3: msesgafdhbdevye");
     }
 
+    // Tests that messages can be correctly parsed from a string
     @RepeatedTest(50)
     public void testFromString() throws ParseException {
         Message message = Message.fromString("2017/05/23 15:19 | sadubeuvvfe: psadoeine");
@@ -59,6 +61,7 @@ class MessageTest {
         assertEquals(message.getTimestamp(), dateStringToMillisUTC("2017/05/23 15:19"));
     }
 
+    // Tests that messages are correctly converted to string bytes
     @RepeatedTest(50)
     public void testToStringBytes() {
         long timestamp = dateStringToMillisRandomOffsetUTC("2013/03/17 18:34");
@@ -67,6 +70,7 @@ class MessageTest {
         assertArrayEquals(message.toStringBytes(), "2013/03/17 18:34 | sdnjajhu3yuy3: msesgafdhbdevye".getBytes(StandardCharsets.US_ASCII));
     }
 
+    // Tests that messages can be correctly parsed from string bytes
     @RepeatedTest(50)
     public void testFromStringBytes() throws ParseException {
         Message message = Message.fromStringBytes("2017/05/23 15:19 | sadubeuvvfe: psadoeine".getBytes(StandardCharsets.US_ASCII));
@@ -75,6 +79,7 @@ class MessageTest {
         assertEquals(message.getTimestamp(), dateStringToMillisUTC("2017/05/23 15:19"));
     }
 
+    // Tests that converting to a string and back again gives the same message
     @RepeatedTest(50)
     public void testToStringFromString() throws ParseException {
         String username = UUID.randomUUID().toString();
@@ -85,6 +90,7 @@ class MessageTest {
         assertEquals(message, Message.fromString(message.toString()));
     }
 
+    // Tests that converting to string bytes and back again gives the same message
     @RepeatedTest(50)
     public void testToStringFromStringBytes() throws ParseException {
         String username = UUID.randomUUID().toString();
@@ -95,11 +101,12 @@ class MessageTest {
         assertEquals(message, Message.fromStringBytes(message.toStringBytes()));
     }
 
-
+    // Truncates a time to minute-level accuracy
     private long truncateToMinutes(long millis) {
         return Instant.ofEpochMilli(millis).truncatedTo(ChronoUnit.MINUTES).toEpochMilli();
     }
 
+    // Parses a date string yyyy/MM/dd HH:mm to a UTC timestamp
     private long dateStringToMillisUTC(String date) {
         try {
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm");
@@ -111,8 +118,9 @@ class MessageTest {
         }
     }
 
+    // Parses a date string yyyy/MM/dd HH:mm to a UTC timestamp, with a random positive offset of up to 20 seconds
     private long dateStringToMillisRandomOffsetUTC(String date) {
-        return dateStringToMillisUTC(date) + ThreadLocalRandom.current().nextInt(100, 800);
+        return dateStringToMillisUTC(date) + ThreadLocalRandom.current().nextInt(100, 20000);
     }
 
 }
