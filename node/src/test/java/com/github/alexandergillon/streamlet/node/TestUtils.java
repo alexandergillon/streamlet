@@ -1,9 +1,11 @@
 package com.github.alexandergillon.streamlet.node;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.models.Message;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 
 // Test utilities
@@ -54,9 +56,26 @@ public class TestUtils {
         return new Block(parent.getHash(), epoch, payload);
     }
 
+    // Gets a random payload for a block
     public static byte[] randomPayload() {
         byte[] payload = new byte[ThreadLocalRandom.current().nextInt(2048, 4096)];
         ThreadLocalRandom.current().nextBytes(payload);
         return payload;
     }
+
+    // Gets a random block with a specified payload
+    public static Block getRandomBlockWithPayload(byte[] payload) {
+        byte[] parentHash = new byte[SHA_256_HASH_LENGTH_BYTES];
+        ThreadLocalRandom.current().nextBytes(parentHash);
+        int epoch = ThreadLocalRandom.current().nextInt(0, 1_000_000);
+
+        return new Block(parentHash, epoch, payload);
+    }
+
+    // Gets a random message
+    public static Message randomMessage() {
+        return new Message(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+                System.currentTimeMillis() - ThreadLocalRandom.current().nextInt(0, 6000000));
+    }
+
 }
