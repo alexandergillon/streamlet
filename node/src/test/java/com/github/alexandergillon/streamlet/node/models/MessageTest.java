@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.TimeZone;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -21,13 +22,12 @@ class MessageTest {
         assertThrows(IllegalArgumentException.class, () -> new Message("illegal:username", "message", 0));
     }
 
-    // Tests truncation of timestamps to second-level accuracy
+    // Tests truncation of timestamps to minute-level accuracy
     @RepeatedTest(50)
     public void testTimestampTruncation() {
         String username = UUID.randomUUID().toString();
         String messageText = UUID.randomUUID().toString();
-        long nowSeconds = Instant.now().getEpochSecond();
-        long nowMillis = secondsToMillis(nowSeconds);
+        long nowMillis = truncateToMinutes(System.currentTimeMillis());
 
         Message message1 = new Message(username, messageText, nowMillis);
         assertEquals(nowMillis, message1.getTimestamp());
@@ -35,7 +35,7 @@ class MessageTest {
         assertEquals(nowMillis, message2.getTimestamp());
         Message message3 = new Message(username, messageText, nowMillis+100);
         assertEquals(nowMillis, message3.getTimestamp());
-        Message message4 = new Message(username, messageText, nowMillis + ThreadLocalRandom.current().nextInt(50, 150));
+        Message message4 = new Message(username, messageText, nowMillis + ThreadLocalRandom.current().nextInt(200, 50000));
         assertEquals(nowMillis, message4.getTimestamp());
 
         assertEquals(message1, message2);
@@ -96,8 +96,8 @@ class MessageTest {
     }
 
 
-    private long secondsToMillis(long seconds) {
-        return seconds * 1000L;
+    private long truncateToMinutes(long millis) {
+        return Instant.ofEpochMilli(millis).truncatedTo(ChronoUnit.MINUTES).toEpochMilli();
     }
 
     private long dateStringToMillisUTC(String date) {

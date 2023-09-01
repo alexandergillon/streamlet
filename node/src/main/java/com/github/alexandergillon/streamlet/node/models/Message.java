@@ -22,11 +22,11 @@ public class Message {
     /** Message text. */
     private final String text;
 
-    /** Timestamp of the message. Used for de-duplication. All timestamps are truncated to second-level accuracy. */
+    /** Timestamp of the message. Used for de-duplication. All timestamps are truncated to minute-level accuracy. */
     private final long timestamp;
 
     /**
-     * Constructor. NOTE: all timestamps are truncated to second-level accuracy.
+     * Constructor. NOTE: all timestamps are truncated to minute-level accuracy.
      * @throws IllegalArgumentException If username contains a colon character.
      * */
     public Message(String username, String text, long timestamp) throws IllegalArgumentException {
@@ -34,8 +34,8 @@ public class Message {
 
         this.username = username;
         this.text = text;
-        // truncates timestamp to seconds
-        this.timestamp = Instant.ofEpochMilli(timestamp).truncatedTo(ChronoUnit.SECONDS).toEpochMilli();
+        // truncates timestamp to minutes
+        this.timestamp = Instant.ofEpochMilli(timestamp).truncatedTo(ChronoUnit.MINUTES).toEpochMilli();
     }
 
     @Override
