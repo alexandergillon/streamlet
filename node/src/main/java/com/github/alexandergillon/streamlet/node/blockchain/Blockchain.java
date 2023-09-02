@@ -24,6 +24,7 @@ public interface Blockchain {
      * @throws UnknownBlockException If the block's parent is not found in the tree.
      */
     boolean processProposedBlock(Block block, int proposer, int currentEpoch, boolean firstProposal) throws InvalidBlockException, UnknownBlockException;
+
     /**
      * Processes a 'vote' message from another node. The block must be validated before calling this function
      * (the signature is valid, etc.).
@@ -35,6 +36,7 @@ public interface Blockchain {
      * @throws UnknownBlockException If the block (or its parent) cannot be found in the tree.
      */
     void processBlockVote(Block block, int voterId) throws InvalidBlockException, UnknownBlockException;
+
     /**
      * Queries whether a block is contained within the blockchain.
      *
@@ -42,6 +44,7 @@ public interface Blockchain {
      * @return Whether that block is contained within the blockchain.
      */
     boolean contains(Block block);
+
     /**
      * Queries whether a block in the blockchain is notarized.
      *
@@ -50,6 +53,7 @@ public interface Blockchain {
      * @throws NoSuchElementException If the block does not exist in the blockchain.
      */
     boolean isNotarized(Block block) throws NoSuchElementException;
+
     /**
      * Queries whether a block in the blockchain is finalized.
      *
@@ -58,6 +62,7 @@ public interface Blockchain {
      * @throws NoSuchElementException If the block does not exist in the blockchain.
      */
     boolean isFinalized(Block block) throws NoSuchElementException;
+
     /**
      * Gets the parent block of a block in the blockchain.
      * @param block The block whose parent to find.
@@ -65,6 +70,7 @@ public interface Blockchain {
      * @throws NoSuchElementException If the block does not exist in the blockchain.
      */
     Block getParent(Block block) throws NoSuchElementException;
+
     /** @return The finalized chain of the blockchain, from oldest to youngest block. */
     List<Block> getFinalizedChain();
 }

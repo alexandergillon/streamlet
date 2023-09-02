@@ -13,8 +13,10 @@ public interface CryptographyService {
      * @return A digital signature of the block with SHA384withECDSA and this node's private key.
      */
     byte[] sign(Block block);
+
     /** Same as {@link #sign(Block)}, but returns the signature as a base-64 encoded string. */
     String signBase64(Block block);
+
     /**
      * Validates that a digital signature on a block came from the proposer of that block.
      *
@@ -23,6 +25,7 @@ public interface CryptographyService {
      * @return Whether the digital signature is a valid digital signature from the proposer of the block.
      */
     boolean validateProposal(Block block, byte[] signature);
+
     /**
      * Validates that a digital signature on a block came from a specific node.
      *
@@ -32,6 +35,7 @@ public interface CryptographyService {
      * @return Whether the digital signature is a valid digital signature from the voter, on the block.
      */
     boolean validateVote(Block block, int voter, byte[] signature);
+
     /**
      * Returns the leader for a given epoch. The leader for an epoch is given by the following process:
      *
