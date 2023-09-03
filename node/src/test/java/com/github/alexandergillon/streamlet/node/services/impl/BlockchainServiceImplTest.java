@@ -196,6 +196,37 @@ class BlockchainServiceImplTest {
         }
     }
 
+    // Tests that BlockchainService.setEpoch() throws correct exceptions
+    @Test
+    @DirtiesContext
+    public void testSetEpochExceptionEqual() {
+        assertDoesNotThrow(() -> blockchainService.setEpoch(0));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(1));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(2));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(3));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(5));
+        assertThrows(IllegalArgumentException.class, () -> blockchainService.setEpoch(5));
+    }
+
+    // Tests that BlockchainService.setEpoch() throws correct exceptions
+    @Test
+    @DirtiesContext
+    public void testSetEpochExceptionLess() {
+        assertDoesNotThrow(() -> blockchainService.setEpoch(0));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(1));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(2));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(3));
+        assertDoesNotThrow(() -> blockchainService.setEpoch(5));
+        assertThrows(IllegalArgumentException.class, () -> blockchainService.setEpoch(4));
+    }
+
+    // Tests that negative epoch throws exception
+    @Test
+    @DirtiesContext
+    public void testNegativeEpoch() {
+        assertThrows(IllegalArgumentException.class, () -> blockchainService.setEpoch(-100));
+    }
+
     // Tests ideal behavior (message delivery is in-order, on time, and no forking of the chain).
     @Test
     @DirtiesContext

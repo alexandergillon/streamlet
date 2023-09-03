@@ -12,10 +12,12 @@ public interface BlockchainService {
 
     /**
      * Sets the current epoch. In order for this service to function correctly, this must be called
-     * in a timely fashion.
+     * in a timely fashion. NOTE: internally, the epoch starts in an invalid state. Epoch must be set before
+     * calling other functions.
      *
      * @param epoch The current epoch to set the epoch to.
-     * @throws IllegalArgumentException If the epoch is less than or equal to the current epoch. Epoch should only increase.
+     * @throws IllegalArgumentException If epoch is less than zero. Also, if the epoch is less than or equal to the
+     * current epoch. Epoch should only increase.
      */
     void setEpoch(int epoch) throws IllegalArgumentException;
 

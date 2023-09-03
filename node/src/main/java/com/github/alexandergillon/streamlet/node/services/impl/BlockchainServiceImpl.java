@@ -33,7 +33,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     private final CryptographyService cryptographyService;
 
     // Member variables
-    private int currentEpoch = 0;
+    private int currentEpoch = -1;
     private boolean firstProposalForEpoch = true;
     private Blockchain blockchain;
 
@@ -48,6 +48,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
     @Override
     public void setEpoch(int epoch) {
+        if (epoch < 0) throw new IllegalArgumentException("Epoch " + epoch + " is less than zero");
         if (epoch <= currentEpoch) throw new IllegalArgumentException("Epoch " + epoch + " is less than current epoch of " + currentEpoch);
         currentEpoch = epoch;
         firstProposalForEpoch = true;
@@ -55,6 +56,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
     @Override
     public boolean processProposedBlock(Block block, int proposer, byte[] signature) {
+        checkEpoch();
         // If the block is invalid, we discard it and return false
         if (!validateProposedBlock(block, proposer, signature)) return false;
 
@@ -74,6 +76,7 @@ public class BlockchainServiceImpl implements BlockchainService {
 
     @Override
     public void processBlockVote(Block block, int voterId, byte[] signature, byte[] proposerSignature) {
+        checkEpoch();
         // If the block is invalid, we discard it
         if (!validateVote(block, voterId, signature, proposerSignature)) return;
 
@@ -90,7 +93,13 @@ public class BlockchainServiceImpl implements BlockchainService {
 
     @Override
     public List<Block> getFinalizedChain() {
+        checkEpoch();
         return blockchain.getFinalizedChain();
+    }
+
+    /** Checks that the epoch has been set correctly, before other {@link BlockchainService} functions are called. */
+    private void checkEpoch() {
+        if (currentEpoch < 0) throw new IllegalStateException("Epoch of blockchain has not been set.");
     }
 
     /**
