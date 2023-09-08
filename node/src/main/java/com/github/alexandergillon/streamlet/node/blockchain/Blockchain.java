@@ -5,6 +5,7 @@ import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBl
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /** Interface to be implemented by a blockchain which implements the Streamlet protocol. */
 public interface Blockchain {
@@ -81,4 +82,20 @@ public interface Blockchain {
      * @return The tail block of the longest notarized chain of the blockchain.
      */
     Block getLongestNotarizedChainTail();
+
+    /**
+     * Gets the set of unfinalized blocks ending at a specific block. For example, if the following is the blockchain: <br> <br>
+     *
+     * {@code GENESIS** --- b0** --- b1** --- b2* --- b3* --- b4* --- b5 --- b6} <br> <br>
+     *
+     * Where {@code *} means that a block is notarized, and {@code **} means that a block is notarized and finalized,
+     * then getUnfinalizedAncestorSetOf(b4) would return {b2, b3, b4}. <br> <br>
+     *
+     * A note on the function name: blocks are considered ancestors of themselves.
+     *
+     * @param block The block whose unfinalized ancestor set to get.
+     * @return The unfinalized ancestor set of that block.
+     * @throws IllegalArgumentException If the block is not in the blockchain.
+     */
+    Set<Block> getUnfinalizedAncestorSetOf(Block block) throws IllegalArgumentException;
 }

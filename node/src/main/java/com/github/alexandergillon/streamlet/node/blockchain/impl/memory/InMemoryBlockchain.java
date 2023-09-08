@@ -9,8 +9,10 @@ import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockInfo;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockTree;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 
 /** Implementation of the {@link Blockchain} interface, with data stored in-memory. */
 public class InMemoryBlockchain implements Blockchain {
@@ -124,6 +126,19 @@ public class InMemoryBlockchain implements Blockchain {
     @Override
     public Block getLongestNotarizedChainTail() {
         return root.getLongestNotarizedChainTail().getBlockInfo().getBlock();
+    }
+
+    @Override
+    public Set<Block> getUnfinalizedAncestorSetOf(Block block) {
+        HashSet<Block> unfinalizedSet = new HashSet<>();
+
+        BlockTree current = root.find(block);
+        while (!current.getBlockInfo().isFinalized()) {
+            unfinalizedSet.add(current.getBlockInfo().getBlock());
+            current = current.getParent();
+        }
+
+        return unfinalizedSet;
     }
 
     /**

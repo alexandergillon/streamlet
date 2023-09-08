@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -867,6 +868,48 @@ class InMemoryBlockchainTest {
         doTest(test, blockchain);
     }
 
+    // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain, with
+    // multiple unnotarized proposals chaining off each other
+    @Test
+    public void testLongestNotarizedChainTailMutlipleUnnotarized() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        String test = """
+            assert longestnotarizedtail b0
+            e1:
+            n1 propose b1
+            n2 vote b1
+            assert longestnotarizedtail b0
+            n3 vote b1
+            assert longestnotarizedtail b1
+            
+            e2:
+            n1 propose b2
+            n2 vote b2
+            assert longestnotarizedtail b1
+            
+            e3:
+            n1 propose b3
+            n2 vote b3
+            assert longestnotarizedtail b1
+            
+            e4:
+            n1 propose b4
+            n2 vote b4
+            assert longestnotarizedtail b1
+           
+            n3 vote b2
+            assert longestnotarizedtail b2
+            n3 vote b3
+            n4 vote b3
+            assert longestnotarizedtail b3
+            n3 vote b4
+            n4 vote b4
+            assert longestnotarizedtail b4
+            
+            """;
+        doTest(test, blockchain);
+    }
+
     // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain, even with forking
     @Test
     public void testLongestNotarizedChainTailFork() {
@@ -927,6 +970,140 @@ class InMemoryBlockchainTest {
                 
                 """;
         doTest(test, blockchain);
+    }
+
+    // Tests that the blockchain correctly gives us unfinalized sets
+    @Test
+    public void testUnfinalizedSet() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(0)).isEmpty());
+        String part1 = """
+            e1:
+            n1 propose b1
+            n2 vote b1
+            n3 vote b1
+            """;
+        doTest(part1, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(1)), Set.of(blocks.get(1)));
+
+        String part2 = """
+            e2:
+            n1 propose b2
+            n2 vote b2
+            n3 vote b2
+            """;
+        doTest(part2, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(2)), Set.of(blocks.get(2)));
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(1)).isEmpty());
+
+        String part3 = """
+            e3:
+            n1 propose b3
+            n2 vote b3
+            n3 vote b3
+            """;
+        doTest(part3, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(3)), Set.of(blocks.get(3)));
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(2)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(1)).isEmpty());
+
+        String part4 = """
+            e4:
+            n1 propose b4
+            n2 vote b4
+            n3 vote b4
+            """;
+        doTest(part4, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(4)), Set.of(blocks.get(4)));
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(3)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(2)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(1)).isEmpty());
+    }
+
+    // Tests that the blockchain correctly gives us unfinalized sets, even with forking
+    @Test
+    public void testUnfinalizedSetFork() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
+        doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
+        String part1 =
+                """
+                e8:
+                n1 propose b26
+                
+                e9:
+                n2 propose b27
+                
+                n2 vote b26
+                n3 vote b26
+                n1 vote b27
+                n3 vote b27
+                """;
+        // block 7 gets finalized by notarization of block 26
+        doTest(part1, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(26)), Set.of(blocks.get(26)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(27)), Set.of(blocks.get(27)));
+
+        String part2 =
+                """
+                e10:
+                n1 propose b28
+                
+                e11:
+                n2 propose b29
+                
+                n2 vote b28
+                n3 vote b28
+                n1 vote b29
+                n3 vote b29
+                """;
+        doTest(part2, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(26)), Set.of(blocks.get(26)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(27)), Set.of(blocks.get(27)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(28)), Set.of(blocks.get(26), blocks.get(28)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(29)), Set.of(blocks.get(27), blocks.get(29)));
+
+
+        String part3 =
+                """
+                e12:
+                n2 propose b33
+                
+                e13:
+                n1 propose b30
+                
+                n1 vote b33
+                n3 vote b33
+                n2 vote b30
+                n3 vote b30
+                """;
+        doTest(part3, blockchain);
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(26)), Set.of(blocks.get(26)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(27)), Set.of(blocks.get(27)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(28)), Set.of(blocks.get(26), blocks.get(28)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(29)), Set.of(blocks.get(27), blocks.get(29)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(30)), Set.of(blocks.get(26), blocks.get(28), blocks.get(30)));
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(33)), Set.of(blocks.get(27), blocks.get(29), blocks.get(33)));
+
+        String part4 =
+                """
+                e14:
+                n1 propose b31
+                n2 vote b31
+                n3 vote b31
+                
+                e15:
+                n1 propose b32
+                n2 vote b32
+                n3 vote b32
+                
+                """;
+        doTest(part4, blockchain);
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(26)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(28)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(30)).isEmpty());
+        assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(31)).isEmpty());
+        assertEquals(blockchain.getUnfinalizedAncestorSetOf(blocks.get(32)), Set.of(blocks.get(32)));
     }
 
     // Tests that correct exceptions are thrown when a bad propose occurs
