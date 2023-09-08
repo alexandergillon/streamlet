@@ -121,6 +121,11 @@ public class InMemoryBlockchain implements Blockchain {
         }
     }
 
+    @Override
+    public Block getLongestNotarizedChainTail() {
+        return root.getLongestNotarizedChainTail().getBlockInfo().getBlock();
+    }
+
     /**
      * Inserts a block into the block tree, adding the vote of the node who we heard about this block from. For example,
      * if we heard about it because a round leader proposed it, then we need to add their vote. Or, if we heard about

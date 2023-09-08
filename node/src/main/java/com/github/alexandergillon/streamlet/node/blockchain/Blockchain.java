@@ -73,4 +73,12 @@ public interface Blockchain {
 
     /** @return The finalized chain of the blockchain, from oldest to youngest block. */
     List<Block> getFinalizedChain();
+
+    /**
+     * Gets the tail block of the longest notarized chain of the blockchain. This is the block that should be the
+     * parent of any block proposed by this node.
+     *
+     * @return The tail block of the longest notarized chain of the blockchain.
+     */
+    Block getLongestNotarizedChainTail();
 }

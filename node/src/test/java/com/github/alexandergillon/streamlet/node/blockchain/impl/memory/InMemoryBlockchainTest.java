@@ -421,7 +421,7 @@ class InMemoryBlockchainTest {
     @Test
     public void testFork() {
         Blockchain blockchain = new InMemoryBlockchain(0, 4);
-        // Voting patterns as seen below are possible if (for whatever reason) vote messages
+        // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
         String test = first7BlocksIdealNetworkNotarizationThreshold4 +
                 """
                 e8:
@@ -808,6 +808,127 @@ class InMemoryBlockchainTest {
         assertEquals(expectedFinalizedChain, blockchain.getFinalizedChain());
     }
 
+    // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain
+    @Test
+    public void testLongestNotarizedChainTail() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        String test = """
+            assert longestnotarizedtail b0
+            e1:
+            n1 propose b1
+            n2 vote b1
+            assert longestnotarizedtail b0
+            n3 vote b1
+            assert longestnotarizedtail b1
+            
+            e2:
+            n1 propose b2
+            n2 vote b2
+            assert longestnotarizedtail b1
+            n3 vote b2
+            assert longestnotarizedtail b2
+            
+            e3:
+            n1 propose b3
+            n2 vote b3
+            assert longestnotarizedtail b2
+            n3 vote b3
+            assert longestnotarizedtail b3
+            
+            e4:
+            n1 propose b4
+            n2 vote b4
+            assert longestnotarizedtail b3
+            n3 vote b4
+            assert longestnotarizedtail b4
+            
+            e5:
+            n1 propose b5
+            n2 vote b5
+            assert longestnotarizedtail b4
+            n3 vote b5
+            assert longestnotarizedtail b5
+            
+            e6:
+            n1 propose b6
+            n2 vote b6
+            assert longestnotarizedtail b5
+            n3 vote b6
+            assert longestnotarizedtail b6
+            
+            e7:
+            n1 propose b7
+            n2 vote b7
+            assert longestnotarizedtail b6
+            n3 vote b7
+            assert longestnotarizedtail b7
+            
+            """;
+        doTest(test, blockchain);
+    }
+
+    // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain, even with forking
+    @Test
+    public void testLongestNotarizedChainTailFork() {
+        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
+        String test = first7BlocksIdealNetworkNotarizationThreshold4 +
+                """
+                e8:
+                n1 propose b26
+                
+                e9:
+                n2 propose b27
+                
+                n2 vote b26
+                n3 vote b26
+                n1 vote b27
+                n3 vote b27
+                
+                assert longestnotarizedtail b26 b27
+                
+                e10:
+                n1 propose b28
+                
+                e11:
+                n2 propose b29
+                
+                n2 vote b28
+                n3 vote b28
+                n1 vote b29
+                n3 vote b29
+                
+                assert longestnotarizedtail b28 b29
+                
+                e12:
+                n2 propose b33
+                
+                e13:
+                n1 propose b30
+                
+                n1 vote b33
+                n3 vote b33
+                n2 vote b30
+                n3 vote b30
+                
+                assert longestnotarizedtail b30 b33
+                
+                e14:
+                n1 propose b31
+                n2 vote b31
+                n3 vote b31
+                assert longestnotarizedtail b31
+                
+                e15:
+                n1 propose b32
+                n2 vote b32
+                n3 vote b32
+                assert longestnotarizedtail b32
+                
+                """;
+        doTest(test, blockchain);
+    }
+
     // Tests that correct exceptions are thrown when a bad propose occurs
     @Test
     public void testBadPropose() {
@@ -859,11 +980,17 @@ class InMemoryBlockchainTest {
             else if (firstToken.equals("assert")) {
                 String secondToken = tokens[1];
                 int blockIndex = Integer.parseInt(tokens[2].substring(1));
-                int parentIndex = tokens.length >= 4 ? Integer.parseInt(tokens[3].substring(1)) : -1;
+                int secondBlockIndex = tokens.length >= 4 ? Integer.parseInt(tokens[3].substring(1)) : -1;
 
                 // switch expressions (vs statements) do not fall through
                 switch (secondToken) {
-                    case "parent" -> assertEquals(blockchain.getParent(blocks.get(blockIndex)), blocks.get(parentIndex));
+                    case "parent" -> assertEquals(blockchain.getParent(blocks.get(blockIndex)), blocks.get(secondBlockIndex));
+                    case "longestnotarizedtail" -> {
+                        ArrayList<Block> potentialTails = new ArrayList<>();
+                        potentialTails.add(blocks.get(blockIndex));
+                        if (secondBlockIndex != -1) potentialTails.add(blocks.get(secondBlockIndex));
+                        assertTrue(potentialTails.contains(blockchain.getLongestNotarizedChainTail()));
+                    }
                     case "contains" -> assertTrue(blockchain.contains(blocks.get(blockIndex)));
                     case "notarized" -> assertTrue(blockchain.isNotarized(blocks.get(blockIndex)));
                     case "finalized" -> assertTrue(blockchain.isFinalized(blocks.get(blockIndex)));

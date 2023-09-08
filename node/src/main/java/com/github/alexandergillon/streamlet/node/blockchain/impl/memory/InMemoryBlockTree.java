@@ -149,6 +149,12 @@ public class InMemoryBlockTree implements BlockTree {
         }
     }
 
+    @Override
+    public BlockTree getLongestNotarizedChainTail() {
+        LongestNotarizedChainResult result = getLongestNotarizedChainTailInternal();
+        return result == null ? null : result.bestNode;
+    }
+
     /**
      * Searches a {@link BlockTree} list for a node with a specific {@link Block}.
      *
@@ -164,5 +170,34 @@ public class InMemoryBlockTree implements BlockTree {
         }
 
         return null;
+    }
+
+    /** POJO for getLongestNotarizedChainTailInternal() return value. Essentially just a pair of int, BlockTree. */
+    private record LongestNotarizedChainResult(int bestLength, BlockTree bestNode) { }
+
+    /**
+     * Gets the longest notarized chain tail from this node, and the length of the notarized chain. If this
+     * node is not notarized, returns null.
+     *
+     * @return The longest notarized chain tail from this node, and the length of that chain, or null if this
+     * node is not notarized.
+     */
+    private LongestNotarizedChainResult getLongestNotarizedChainTailInternal() {
+        if (!blockInfo.isNotarized()) return null;
+
+        int bestLength = 0;
+        BlockTree bestNode = this;
+        for (InMemoryBlockTree child : children) {
+            LongestNotarizedChainResult result = child.getLongestNotarizedChainTailInternal();
+            if (result == null) continue;
+
+            if (result.bestLength > bestLength) {
+                bestLength = result.bestLength;
+                bestNode = result.bestNode;
+            }
+        }
+
+        bestLength++;  // include this node in the count
+        return new LongestNotarizedChainResult(bestLength, bestNode);
     }
 }

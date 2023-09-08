@@ -90,4 +90,13 @@ public interface BlockTree {
     /** @return The length of the longest notarized chain in the tree. */
     int getLongestNotarizedChainLength();
 
+    /**
+     * Gets the node of the tail block of the longest notarized chain of this node. This is the node of the block
+     * that should be the parent of any block proposed by this node.
+     *
+     * @return The node of the tail block of the longest notarized chain of the blockchain, or null if this node is not
+     * notarized.
+     */
+    BlockTree getLongestNotarizedChainTail();
+
 }
