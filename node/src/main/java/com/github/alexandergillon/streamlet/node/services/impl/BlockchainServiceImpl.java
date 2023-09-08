@@ -97,6 +97,12 @@ public class BlockchainServiceImpl implements BlockchainService {
         return blockchain.getFinalizedChain();
     }
 
+    @Override
+    public void proposeBlock() {
+        checkEpoch();
+        throw new UnsupportedOperationException("not implemented");
+    }
+
     /** Checks that the epoch has been set correctly, before other {@link BlockchainService} functions are called. */
     private void checkEpoch() {
         if (currentEpoch < 0) throw new IllegalStateException("Epoch of blockchain has not been set.");

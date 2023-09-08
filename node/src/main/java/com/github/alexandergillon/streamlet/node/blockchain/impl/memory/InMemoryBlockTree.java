@@ -139,7 +139,7 @@ public class InMemoryBlockTree implements BlockTree {
         if (!blockInfo.isNotarized()) return 0;
 
         if (children.isEmpty()) {
-            return 1;  // This node is notarized from earlier check
+            return 1;  // This node is notarized from the earlier check
         } else {
             int longestNotarizedChildChain = 0;
             for (BlockTree child : children) {

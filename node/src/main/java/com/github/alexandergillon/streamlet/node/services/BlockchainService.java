@@ -49,4 +49,6 @@ public interface BlockchainService {
     /** @return The finalized chain of the blockchain, from oldest to youngest block. */
     List<Block> getFinalizedChain();
 
+    void proposeBlock();
+
 }
