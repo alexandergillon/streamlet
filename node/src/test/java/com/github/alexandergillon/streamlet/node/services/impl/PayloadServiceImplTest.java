@@ -2,7 +2,7 @@ package com.github.alexandergillon.streamlet.node.services.impl;
 
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
-import com.github.alexandergillon.streamlet.node.models.Message;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,11 +26,11 @@ class PayloadServiceImplTest {
     public void testPayloadOrderImmediateFinalization() {
         assertNull(payloadService.getNextPayload(new HashSet<>()));
         
-        Message message1 = TestUtils.randomMessage();
-        Message message2 = TestUtils.randomMessage();
-        Message message3 = TestUtils.randomMessage();
-        Message message4 = TestUtils.randomMessage();
-        Message message5 = TestUtils.randomMessage();
+        PayloadMessage message1 = TestUtils.randomMessage();
+        PayloadMessage message2 = TestUtils.randomMessage();
+        PayloadMessage message3 = TestUtils.randomMessage();
+        PayloadMessage message4 = TestUtils.randomMessage();
+        PayloadMessage message5 = TestUtils.randomMessage();
         payloadService.addPendingMessage(message1);
         payloadService.addPendingMessage(message2);
         payloadService.addPendingMessage(message3);
@@ -53,11 +53,11 @@ class PayloadServiceImplTest {
     // Tests that the correct messages are returned when some pending messages are included in unfinalized chains
     @Test
     public void testPayloadOrderWithUnfinalizedChains() {
-        Message message1 = TestUtils.randomMessage();
-        Message message2 = TestUtils.randomMessage();
-        Message message3 = TestUtils.randomMessage();
-        Message message4 = TestUtils.randomMessage();
-        Message message5 = TestUtils.randomMessage();
+        PayloadMessage message1 = TestUtils.randomMessage();
+        PayloadMessage message2 = TestUtils.randomMessage();
+        PayloadMessage message3 = TestUtils.randomMessage();
+        PayloadMessage message4 = TestUtils.randomMessage();
+        PayloadMessage message5 = TestUtils.randomMessage();
         payloadService.addPendingMessage(message1);
         payloadService.addPendingMessage(message2);
         payloadService.addPendingMessage(message3);
@@ -91,20 +91,20 @@ class PayloadServiceImplTest {
     // Tests that finalization of messages not known to the payload service do not cause problems
     @Test
     public void testUnknownFinalizations() {
-        Message message1 = TestUtils.randomMessage();
-        Message message2 = TestUtils.randomMessage();
-        Message message3 = TestUtils.randomMessage();
-        Message message4 = TestUtils.randomMessage();
-        Message message5 = TestUtils.randomMessage();
+        PayloadMessage message1 = TestUtils.randomMessage();
+        PayloadMessage message2 = TestUtils.randomMessage();
+        PayloadMessage message3 = TestUtils.randomMessage();
+        PayloadMessage message4 = TestUtils.randomMessage();
+        PayloadMessage message5 = TestUtils.randomMessage();
         payloadService.addPendingMessage(message1);
         payloadService.addPendingMessage(message2);
         payloadService.addPendingMessage(message3);
         payloadService.addPendingMessage(message4);
         payloadService.addPendingMessage(message5);
 
-        Message unknownMessage1 = TestUtils.randomMessage();
-        Message unknownMessage2 = TestUtils.randomMessage();
-        Message unknownMessage3 = TestUtils.randomMessage();
+        PayloadMessage unknownMessage1 = TestUtils.randomMessage();
+        PayloadMessage unknownMessage2 = TestUtils.randomMessage();
+        PayloadMessage unknownMessage3 = TestUtils.randomMessage();
 
         assertArrayEquals(message1.toStringBytes(), payloadService.getNextPayload(new HashSet<>()));
         payloadService.finalizedPayload(message1.toStringBytes());
@@ -125,11 +125,11 @@ class PayloadServiceImplTest {
     // Tests that repeatedly adding the same pending messages does not alter order or duplicate messages
     @Test
     public void testDuplicateMessages() {
-        Message message1 = TestUtils.randomMessage();
-        Message message2 = TestUtils.randomMessage();
-        Message message3 = TestUtils.randomMessage();
-        Message message4 = TestUtils.randomMessage();
-        Message message5 = TestUtils.randomMessage();
+        PayloadMessage message1 = TestUtils.randomMessage();
+        PayloadMessage message2 = TestUtils.randomMessage();
+        PayloadMessage message3 = TestUtils.randomMessage();
+        PayloadMessage message4 = TestUtils.randomMessage();
+        PayloadMessage message5 = TestUtils.randomMessage();
         payloadService.addPendingMessage(message1);
         payloadService.addPendingMessage(message1);
         payloadService.addPendingMessage(message2);

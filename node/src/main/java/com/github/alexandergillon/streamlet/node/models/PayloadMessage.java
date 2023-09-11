@@ -17,7 +17,7 @@ import java.util.TimeZone;
 @Getter
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Message {
+public class PayloadMessage {
 
     /** The username of the user who sent this message. */
     private String username;
@@ -33,7 +33,7 @@ public class Message {
      * Constructor. NOTE: all timestamps are truncated to minute-level accuracy.
      * @throws IllegalArgumentException If username contains a colon character.
      * */
-    public Message(String username, String text, long timestamp) throws IllegalArgumentException {
+    public PayloadMessage(String username, String text, long timestamp) throws IllegalArgumentException {
         setUsername(username);
         setText(text);
         setTimestamp(timestamp);
@@ -71,13 +71,13 @@ public class Message {
     }
 
     /**
-     * Constructs a {@link Message} from its string representation.
+     * Constructs a {@link PayloadMessage} from its string representation.
      *
-     * @param string The string representation of a {@link Message}.
-     * @return That string, converted to a {@link Message}.
+     * @param string The string representation of a {@link PayloadMessage}.
+     * @return That string, converted to a {@link PayloadMessage}.
      * @throws ParseException If the string representation is invalid.
      */
-    public static Message fromString(String string) throws ParseException {
+    public static PayloadMessage fromString(String string) throws ParseException {
         int barIndex = string.indexOf("|");
         int colonIndex = barIndex + string.substring(barIndex).indexOf(":");
         String dateString = string.substring(0, barIndex);
@@ -89,17 +89,17 @@ public class Message {
 
         long timestamp = simpleDateFormat.parse(dateString).getTime();
 
-        return new Message(username, message, timestamp);
+        return new PayloadMessage(username, message, timestamp);
     }
 
     /**
-     * Converts an ASCII-encoded string (given as a byte array) to a string, and then converts that string to a {@link Message}.
+     * Converts an ASCII-encoded string (given as a byte array) to a string, and then converts that string to a {@link PayloadMessage}.
      *
      * @param bytes ASCII-encoded string, as a byte array.
-     * @return That string, converted to a {@link Message}.
+     * @return That string, converted to a {@link PayloadMessage}.
      * @throws ParseException If the string representation is invalid.
      */
-    public static Message fromStringBytes(byte[] bytes) throws ParseException {
+    public static PayloadMessage fromStringBytes(byte[] bytes) throws ParseException {
         String string = new String(bytes, StandardCharsets.US_ASCII);
         return fromString(string);
     }

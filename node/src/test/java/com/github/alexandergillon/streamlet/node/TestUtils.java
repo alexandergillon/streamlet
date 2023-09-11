@@ -1,7 +1,7 @@
 package com.github.alexandergillon.streamlet.node;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
-import com.github.alexandergillon.streamlet.node.models.Message;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -73,8 +73,8 @@ public class TestUtils {
     }
 
     // Gets a random message
-    public static Message randomMessage() {
-        return new Message(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
+    public static PayloadMessage randomMessage() {
+        return new PayloadMessage(UUID.randomUUID().toString(), UUID.randomUUID().toString(),
                 System.currentTimeMillis() - ThreadLocalRandom.current().nextInt(0, 6000000));
     }
 

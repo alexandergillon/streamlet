@@ -1,7 +1,7 @@
 package com.github.alexandergillon.streamlet.node.services;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
-import com.github.alexandergillon.streamlet.node.models.Message;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 
 import java.util.Set;
 
@@ -13,7 +13,7 @@ public interface PayloadService {
      * Adds a pending message to the internal message buffer.
      * @param message The message to add.
      */
-    void addPendingMessage(Message message);
+    void addPendingMessage(PayloadMessage message);
 
     /**
      * Notifies this service that a payload has been finalized. This is so that we can discard pending messages in the
