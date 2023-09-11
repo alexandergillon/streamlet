@@ -20,6 +20,7 @@ class MessageTest {
     @Test
     public void testNoColonInUsername() {
         assertThrows(IllegalArgumentException.class, () -> new Message("illegal:username", "message", 0));
+        assertThrows(IllegalArgumentException.class, () -> new Message().setUsername("illegal:username"));
     }
 
     // Tests truncation of timestamps to minute-level accuracy
@@ -41,6 +42,65 @@ class MessageTest {
         assertEquals(message1, message2);
         assertEquals(message2, message3);
         assertEquals(message3, message4);
+    }
+
+    // Tests truncation of timestamps to minute-level accuracy when setter is used
+    @RepeatedTest(50)
+    public void testTimestampTruncationWithSetter() {
+        String username = UUID.randomUUID().toString();
+        String messageText = UUID.randomUUID().toString();
+        long nowMillis = truncateToMinutes(System.currentTimeMillis());
+
+        Message message1 = new Message();
+        message1.setUsername(username);
+        message1.setText(messageText);
+        message1.setTimestamp(nowMillis);
+        assertEquals(nowMillis, message1.getTimestamp());
+        Message message2 = new Message();
+        message2.setUsername(username);
+        message2.setText(messageText);
+        message2.setTimestamp(nowMillis+1);
+        assertEquals(nowMillis, message2.getTimestamp());
+        Message message3 = new Message();
+        message3.setUsername(username);
+        message3.setText(messageText);
+        message3.setTimestamp(nowMillis+100);
+        assertEquals(nowMillis, message3.getTimestamp());
+        Message message4 = new Message();
+        message4.setUsername(username);
+        message4.setText(messageText);
+        message4.setTimestamp(nowMillis + ThreadLocalRandom.current().nextInt(200, 50000));
+        assertEquals(nowMillis, message4.getTimestamp());
+
+        assertEquals(message1, message2);
+        assertEquals(message2, message3);
+        assertEquals(message3, message4);
+    }
+
+    // Tests that exception is thrown if message is converted to string before being correctly initialized
+    @Test
+    public void testToStringException() {
+        Message message1 = new Message();
+        assertThrows(IllegalStateException.class, () -> message1.toString());
+        assertThrows(IllegalStateException.class, () -> message1.toStringBytes());
+
+        Message message2 = new Message();
+        message2.setUsername("username");
+        message2.setText("text");
+        assertThrows(IllegalStateException.class, () -> message2.toString());
+        assertThrows(IllegalStateException.class, () -> message2.toStringBytes());
+
+        Message message3 = new Message();
+        message3.setUsername("username");
+        message3.setTimestamp(500000);
+        assertThrows(IllegalStateException.class, () -> message3.toString());
+        assertThrows(IllegalStateException.class, () -> message3.toStringBytes());
+
+        Message message4 = new Message();
+        message4.setText("text");
+        message4.setTimestamp(99999);
+        assertThrows(IllegalStateException.class, () -> message4.toString());
+        assertThrows(IllegalStateException.class, () -> message4.toStringBytes());
     }
 
     // Tests that messages are correctly converted to a string
