@@ -51,6 +51,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+// NOTE: need to precompute all digital signatures as ECDSA signatures are different each time. I.e. compute once and
+// use everywhere: in mocks, in assertions, etc. (as opposed to computing every time with sign() or signBase64())
 @SpringBootTest
 class KafkaServiceImplTest {
 
