@@ -35,11 +35,11 @@ public class PayloadServiceImpl implements PayloadService {
     }
 
     @Override
-    public byte[] getNextPayload(List<Block> unfinalizedChain) {
+    public byte[] getNextPayload(Set<Block> unfinalizedSet) {
         try {
             // TODO: synchronization issues to do with finalizing a block right as we propose one
             HashSet<Message> alreadyIncluded = new HashSet<>();
-            for (Block block : unfinalizedChain) {
+            for (Block block : unfinalizedSet) {
                 alreadyIncluded.add(Message.fromStringBytes(block.getPayload()));
             }
 

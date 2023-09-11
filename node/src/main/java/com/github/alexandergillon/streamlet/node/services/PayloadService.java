@@ -3,7 +3,7 @@ package com.github.alexandergillon.streamlet.node.services;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import com.github.alexandergillon.streamlet.node.models.Message;
 
-import java.util.List;
+import java.util.Set;
 
 /** Service to handle the payload of blocks. Collects pending messages and returns them when needed.
  * Messages are stored and returned in FIFO order. */
@@ -28,11 +28,11 @@ public interface PayloadService {
      * ancestors of the to-be-proposed block which are not finalized) as an argument, to avoid proposing a payload that
      * has already been included in that chain but has not yet been finalized.
      *
-     * @param unfinalizedChain The ancestors of the to-be-proposed block which are not finalized.
+     * @param unfinalizedSet The ancestors of the to-be-proposed block which are not finalized.
      * @return The payload which should be proposed as part of a block that extends this unfinalized chain, or null
      * if there are no pending messages which could be included in the proposed block (i.e. no pending messages at
      * all, or all pending messages are already in the unfinalized chain).
      */
-    byte[] getNextPayload(List<Block> unfinalizedChain);
+    byte[] getNextPayload(Set<Block> unfinalizedSet);
 
 }
