@@ -23,14 +23,17 @@ public class VoteMessage {
      * Note: may be incorrect if a node is Byzantine.
      */
     private int nodeId;
+
     /** The block being voted on. */
     private JsonBlock block;
+
     /**
-     * The digital signature of the block, by the proposer. Blocks are serialized as detailed
+     * The digital signature of the block, by the voter. Blocks are serialized as detailed
      * in {@link Block#toBytes()}, then a SHA256 digest is taken, and that digest is signed with
      * SHA384withECDSA to obtain this signature.
      */
     private String signature;
+
     /**
      * The signature of the block, by the original proposer. This is sent with votes so that
      * nodes can easily discard Byzantine votes (votes on blocks that were never actually

@@ -23,8 +23,10 @@ public class ProposeMessage {
      * Note: may be incorrect if a node is Byzantine.
      */
     private int nodeId;
+
     /** The block being proposed. */
     private JsonBlock block;
+
     /**
      * The digital signature of the block, by the proposer. Blocks are serialized as detailed
      * in {@link Block#toBytes()}, then a SHA256 digest is taken, and that digest is signed with
