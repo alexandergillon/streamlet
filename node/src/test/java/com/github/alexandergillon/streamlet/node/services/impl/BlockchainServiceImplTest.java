@@ -1,15 +1,22 @@
 package com.github.alexandergillon.streamlet.node.services.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
+import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -22,11 +29,16 @@ import java.security.*;
 import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /*
@@ -68,8 +80,16 @@ class BlockchainServiceImplTest {
     @SpyBean
     private CryptographyService cryptographyService;
 
+    @MockBean
+    private PayloadService payloadService;
+
+    @MockBean
+    private KafkaService kafkaService;
+
     @Autowired
     private BlockchainService blockchainService;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void setupSpy() {
@@ -631,6 +651,114 @@ class BlockchainServiceImplTest {
             assert chain b0 b1 b2 b3 b4 b5 b6 b7 b26 b28 b30 b31
             """;
         doTest(test);
+    }
+
+    // Tests that the blockchain proposes blocks correctly
+    @Test
+    @DirtiesContext
+    public void testSimpleProposal() throws JsonProcessingException {
+        String setup = """
+            e1:
+            n2 propose b1
+            n3 vote b1
+            n4 vote b1
+            
+            e2:
+            n2 propose b2
+            n0 vote b2
+            n4 vote b2
+            
+            e3:
+            n0 propose b3
+            n2 vote b3
+            n4 vote b3
+            
+            e4:
+            n4 propose b4
+            n2 vote b4
+            n3 vote b4
+            n0 vote b4
+            
+            e5:
+            """;
+        doTest(setup);
+        int thisEpoch = 5;
+        byte[] payload = TestUtils.randomPayload();
+        byte[] signature = TestUtils.randomPayload();
+
+        //noinspection unchecked
+        when(payloadService.getNextPayload(any(Set.class))).thenReturn(payload);
+        doReturn(signature).when(cryptographyService).sign(any(Block.class));
+        doReturn(Base64.getEncoder().encodeToString(signature)).when(cryptographyService).signBase64(any(Block.class));
+
+        blockchainService.proposeBlock();
+
+        ArgumentCaptor<String> broadcastString = ArgumentCaptor.forClass(String.class);
+        verify(kafkaService).broadcast(broadcastString.capture());
+
+        JsonNode jsonNode = objectMapper.readTree(broadcastString.getValue());
+        assertEquals(jsonNode.get("sender").intValue(), nodeId);
+        assertEquals(jsonNode.get("messageType").textValue(), "propose");
+
+        JsonNode messageNode = jsonNode.get("message");
+        assertEquals(messageNode.get("nodeId").intValue(), nodeId);
+        assertEquals(messageNode.at("/block/parentHash").textValue(), blocks.get(4).getHashBase64());
+        assertEquals(messageNode.at("/block/epoch").intValue(), thisEpoch);
+        assertEquals(messageNode.at("/block/payload").textValue(), Base64.getEncoder().encodeToString(payload));
+        assertEquals(messageNode.get("signature").textValue(), Base64.getEncoder().encodeToString(signature));
+    }
+
+    // Tests that the blockchain proposes blocks correctly when unnotarized blocks exist
+    @Test
+    @DirtiesContext
+    public void testProposalWithUnfinalizedBlocks() throws JsonProcessingException {
+        String setup = """
+            e1:
+            n2 propose b1
+            n3 vote b1
+            n4 vote b1
+            
+            e2:
+            n2 propose b2
+            n0 vote b2
+            n4 vote b2
+            
+            e3:
+            n0 propose b3
+            n2 vote b3
+            n4 vote b3
+            
+            e4:
+            n4 propose b4
+            n3 vote b4
+            
+            e5:
+            """;
+        doTest(setup);
+        int thisEpoch = 5;
+        byte[] payload = TestUtils.randomPayload();
+        byte[] signature = TestUtils.randomPayload();
+
+        //noinspection unchecked
+        when(payloadService.getNextPayload(any(Set.class))).thenReturn(payload);
+        doReturn(signature).when(cryptographyService).sign(any(Block.class));
+        doReturn(Base64.getEncoder().encodeToString(signature)).when(cryptographyService).signBase64(any(Block.class));
+
+        blockchainService.proposeBlock();
+
+        ArgumentCaptor<String> broadcastString = ArgumentCaptor.forClass(String.class);
+        verify(kafkaService).broadcast(broadcastString.capture());
+
+        JsonNode jsonNode = objectMapper.readTree(broadcastString.getValue());
+        assertEquals(jsonNode.get("sender").intValue(), nodeId);
+        assertEquals(jsonNode.get("messageType").textValue(), "propose");
+
+        JsonNode messageNode = jsonNode.get("message");
+        assertEquals(messageNode.get("nodeId").intValue(), nodeId);
+        assertEquals(messageNode.at("/block/parentHash").textValue(), blocks.get(3).getHashBase64());
+        assertEquals(messageNode.at("/block/epoch").intValue(), thisEpoch);
+        assertEquals(messageNode.at("/block/payload").textValue(), Base64.getEncoder().encodeToString(payload));
+        assertEquals(messageNode.get("signature").textValue(), Base64.getEncoder().encodeToString(signature));
     }
 
     private void doTest(String test) {

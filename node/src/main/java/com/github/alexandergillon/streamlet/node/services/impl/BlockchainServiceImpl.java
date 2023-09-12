@@ -7,6 +7,9 @@ import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBl
 import com.github.alexandergillon.streamlet.node.blockchain.impl.memory.InMemoryBlockchain;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
+import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
+import com.github.alexandergillon.streamlet.node.util.SerializationUtils;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Set;
 
 /** Implementation of a {@link BlockchainService}. */
 @Service
@@ -31,6 +35,8 @@ public class BlockchainServiceImpl implements BlockchainService {
 
     // Autowired dependencies (via RequiredArgsConstructor)
     private final CryptographyService cryptographyService;
+    private final PayloadService payloadService;
+    private final KafkaService kafkaService;
 
     // Member variables
     private int currentEpoch = -1;
@@ -100,7 +106,13 @@ public class BlockchainServiceImpl implements BlockchainService {
     @Override
     public void proposeBlock() {
         checkEpoch();
-        throw new UnsupportedOperationException("not implemented");
+
+        Block parent = blockchain.getLongestNotarizedChainTail();
+        Set<Block> unfinalizedSet = blockchain.getUnfinalizedAncestorSetOf(parent);
+        byte[] payload = payloadService.getNextPayload(unfinalizedSet);
+
+        Block proposedBlock = new Block(parent.getHash(), currentEpoch, payload);
+        kafkaService.broadcast(SerializationUtils.buildProposeBroadcast(nodeId, proposedBlock, cryptographyService.signBase64(proposedBlock)));
     }
 
     /** Checks that the epoch has been set correctly, before other {@link BlockchainService} functions are called. */
