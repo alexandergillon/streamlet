@@ -1,11 +1,13 @@
 package com.github.alexandergillon.streamlet.node.services.impl;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
 import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import com.github.alexandergillon.streamlet.node.util.SerializationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +39,14 @@ public class KafkaServiceImpl implements KafkaService {
     // Autowired dependencies (via RequiredArgsConstructor)
     private final BlockchainService blockchainService;
     private final CryptographyService cryptographyService;
+    private final PayloadService payloadService;
     private final KafkaTemplate<String, String> kafkaTemplate;
+
+    @Override
+    @KafkaListener(topics = "payloadsForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.PayloadMessage"})
+    public void processPayload(PayloadMessage message) {
+        payloadService.addPendingMessage(message);
+    }
 
     @Override
     @KafkaListener(topics = "proposalsForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.ProposeMessage"})

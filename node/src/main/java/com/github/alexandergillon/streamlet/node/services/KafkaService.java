@@ -1,10 +1,19 @@
 package com.github.alexandergillon.streamlet.node.services;
 
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 
 /** Service to handle communication with Kafka (consuming and producing messages). */
 public interface KafkaService {
+
+    /**
+     * Processes a payload message from Kafka. This method should be annotated with {@code @KafkaListener}
+     * and appropriate annotation parameters to pick up the correct messages from Kafka.
+     *
+     * @param message The payload message from Kafka, to be processed.
+     */
+    void processPayload(PayloadMessage message);
 
     /**
      * Processes a proposal message from Kafka. This method should be annotated with {@code @KafkaListener}

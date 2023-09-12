@@ -15,8 +15,9 @@ Ultimately, this project is a learning exercise, so I am not too concerned with 
 
 ## Kafka Topics
 
-Each node has two dedicated Kafka topics: one for proposed blocks, and one for votes. For a node with ID `i`, these topics are:
+Each node has three dedicated Kafka topics: one for proposed payloads, one for proposed blocks, and one for votes. For a node with ID `i`, these topics are:
 
+- `payloadsForNodei`
 - `proposalsForNodei`
 - `votesForNodei`
 
@@ -35,7 +36,19 @@ For messages on the `broadcast` topic:
 }
 ```
 
-Messages are broadcast to the appropriate topics based on the `messageType` field. The `sender` field is naively trusted by the broadcast server, and is only used so that the broadcast server does not send messages back to the server. Because the broadcast server is essentially an abstraction on actual broadcasting by each node, it is not a focus of this project to make it entirely secure. 
+Messages are broadcast to the appropriate topics based on the `messageType` field. The `sender` field is naively trusted by the broadcast server, and is only used so that the broadcast server does not send messages back to the server. Because the broadcast server is essentially an abstraction on actual broadcasting by each node, it is not a focus of this project to make it entirely secure. Note: there is no `payload` option for `messageType` as payloads are delivered to the broadcast server via REST API.
+
+### Payloads
+For messages on a `payloadsForNodei` topic:
+
+```json
+{
+  "username": "the username of the user sending the message",
+  "text": "The text of the message",
+  "timestamp": milliseconds since the epoch of when the broadcast server 
+               received this message (JSON int, Java long)
+}
+```
 
 ### Proposals
 For messages on a `proposalsForNodei` topic:

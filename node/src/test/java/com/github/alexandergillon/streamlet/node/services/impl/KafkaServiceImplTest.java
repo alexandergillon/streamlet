@@ -5,11 +5,13 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
 import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -39,6 +41,7 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -76,6 +79,9 @@ class KafkaServiceImplTest {
     @Mock
     CompletableFuture<SendResult<String, String>> result;
 
+    @Mock
+    PayloadService payloadService;
+
     @InjectMocks
     private KafkaServiceImpl kafkaService;
 
@@ -87,6 +93,14 @@ class KafkaServiceImplTest {
     public void injectProperties() {
         ReflectionTestUtils.setField(kafkaService, "nodeId", nodeId);
         ReflectionTestUtils.setField(kafkaService, "broadcastTopicName", "topicName");
+    }
+
+    // Tests that payload messages are processed correctly
+    @Test
+    public void testPayloadMessage() {
+        PayloadMessage message = new PayloadMessage(UUID.randomUUID().toString(), UUID.randomUUID().toString(), ThreadLocalRandom.current().nextInt(1000, 10000000));
+        kafkaService.processPayload(message);
+        verify(payloadService).addPendingMessage(message);
     }
 
     // Tests rejected proposals are processed correctly
