@@ -82,6 +82,7 @@ class SerializationUtilsTest {
         assertEquals(proposerSignature, message.getProposerSignature());
     }
 
+    // Tests that block lists are correctly converted to JSON
     @Test
     public void testBlockListToJson() throws JsonProcessingException {
         Block block0 = TestUtils.getRandomBlock();
