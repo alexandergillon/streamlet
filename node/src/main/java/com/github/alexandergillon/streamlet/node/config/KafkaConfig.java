@@ -12,11 +12,19 @@ import org.springframework.kafka.config.TopicBuilder;
 @Profile("!unittests")
 public class KafkaConfig {
 
+    @Value("payloadsForNode" + "${streamlet.node.id}")
+    private String payloadTopicName;
+
     @Value("proposalsForNode" + "${streamlet.node.id}")
     private String proposalTopicName;
 
     @Value("votesForNode" + "${streamlet.node.id}")
     private String voteTopicName;
+
+    @Bean
+    public NewTopic payloadTopic() {
+        return TopicBuilder.name(payloadTopicName).partitions(1).replicas(3).build();
+    }
 
     @Bean
     public NewTopic proposalTopic() {
