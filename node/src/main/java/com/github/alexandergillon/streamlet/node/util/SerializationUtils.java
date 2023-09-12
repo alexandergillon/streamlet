@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.util.List;
 
 /** Utility class to handle serialization / deserialization functionality. */
 @Slf4j
@@ -87,6 +88,23 @@ public class SerializationUtils {
             jsonRoot.set("message", buildVoteMessage(nodeId, block, signature, proposerSignature));
 
             return objectMapper.writeValueAsString(jsonRoot);
+        } catch (JsonProcessingException e) {
+            log.error("JsonProcessingException", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Converts a list of blocks to its JSON representation. This is a JSON array literal with each member being a
+     * JsonBlock.
+     *
+     * @param blockList A list of blocks.
+     * @return The JSON representation of that list of blocks.
+     */
+    public static String blockListToJson(List<Block> blockList) {
+        try {
+            List<JsonBlock> jsonBlockList = blockList.stream().map(Block::toJsonBlock).toList();
+            return objectMapper.writeValueAsString(jsonBlockList);
         } catch (JsonProcessingException e) {
             log.error("JsonProcessingException", e);
             throw new RuntimeException(e);

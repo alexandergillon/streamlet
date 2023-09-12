@@ -2,6 +2,7 @@ package com.github.alexandergillon.streamlet.node.models;
 
 
 import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -13,6 +14,7 @@ import lombok.ToString;
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
+@EqualsAndHashCode
 public class JsonBlock {
 
     /** SHA256 hash of the parent block in the blockchain, base-64 encoded. */
