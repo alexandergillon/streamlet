@@ -12,4 +12,12 @@ public interface KafkaService {
      */
     void processBroadcast(BroadcastMessage message);
 
+    /**
+     * Broadcasts a proposed payload to all nodes.
+     *
+     * @param username The username of the user who sent this message.
+     * @param text Message text.
+     */
+    void broadcastPayload(String username, String text);
+
 }

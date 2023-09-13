@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alexandergillon.streamlet.broadcast.models.BroadcastMessage;
+import com.github.alexandergillon.streamlet.broadcast.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.broadcast.services.KafkaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,8 @@ public class KafkaServiceImpl implements KafkaService {
     // Constants from Spring properties
     @Value("${streamlet.participants}")
     private int numNodes;
+    @Value("${streamlet.kafka.payload-topic.prefix}")
+    private String payloadTopicPrefix;
     @Value("${streamlet.kafka.propose-topic.prefix}")
     private String proposeTopicPrefix;
     @Value("${streamlet.kafka.vote-topic.prefix}")
@@ -45,6 +48,20 @@ public class KafkaServiceImpl implements KafkaService {
                 log.error("Received broadcast message with unrecognized message type: " + message);
                 throw new RuntimeException("Received broadcast message with unrecognized message type: " + message);
             }
+        }
+    }
+
+    @Override
+    public void broadcastPayload(String username, String text) {
+        try {
+            PayloadMessage message = new PayloadMessage(username, text, System.currentTimeMillis());
+            String json = objectMapper.writeValueAsString(message);
+            for (int i = 0; i < numNodes; i++) {
+                kafkaTemplate.send(payloadTopicPrefix + i, json);  // TODO: fault tolerance - check it got to broker
+            }
+        } catch (JsonProcessingException e) {
+            log.error("Error processing JSON", e);
+            throw new RuntimeException(e);
         }
     }
 

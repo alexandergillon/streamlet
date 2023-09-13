@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alexandergillon.streamlet.broadcast.models.BroadcastMessage;
+import com.github.alexandergillon.streamlet.broadcast.services.KafkaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -11,11 +12,13 @@ import org.mockito.Mock;
 import org.mockito.stubbing.Answer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.HashSet;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,6 +34,8 @@ class KafkaServiceImplTest {
 
     @Value("${streamlet.participants}")
     private int numNodes;
+    @Value("${streamlet.kafka.payload-topic.prefix}")
+    private String payloadTopicPrefix;
     @Value("${streamlet.kafka.propose-topic.prefix}")
     private String proposeTopicPrefix;
     @Value("${streamlet.kafka.vote-topic.prefix}")
@@ -42,11 +47,15 @@ class KafkaServiceImplTest {
     @InjectMocks
     private KafkaServiceImpl kafkaService;
 
+    @MockBean
+    private KafkaService mockKafkaService;  // so that application context comes up
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
     public void injectProperties() {
         ReflectionTestUtils.setField(kafkaService, "numNodes", numNodes);
+        ReflectionTestUtils.setField(kafkaService, "payloadTopicPrefix", payloadTopicPrefix);
         ReflectionTestUtils.setField(kafkaService, "proposeTopicPrefix", proposeTopicPrefix);
         ReflectionTestUtils.setField(kafkaService, "voteTopicPrefix", voteTopicPrefix);
     }
@@ -126,6 +135,33 @@ class KafkaServiceImplTest {
                 assertTrue(topicsBroadcastTo.contains(voteTopicPrefix + i));
             }
         }
+    }
+
+    @Test
+    public void testPayloadBroadcast() {
+        String username = UUID.randomUUID().toString();
+        String text = UUID.randomUUID().toString();
+
+        HashSet<String> topicsBroadcastTo = new HashSet<>();
+        Answer<CompletableFuture<SendResult<String, String>>> answer = invocationOnMock -> {
+            topicsBroadcastTo.add(invocationOnMock.getArgument(0));
+            JsonNode broadcastJson = objectMapper.readTree((String) invocationOnMock.getArgument(1));
+            assertEquals(broadcastJson.get("username").textValue(), username);
+            assertEquals(broadcastJson.get("text").textValue(), text);
+            long timeDelta = System.currentTimeMillis() - broadcastJson.get("timestamp").longValue();
+            assertTrue(timeDelta >= 0 && timeDelta < 1000);
+            return CompletableFuture.completedFuture(null);
+        };
+
+        when(kafkaTemplate.send(anyString(), anyString())).thenAnswer(answer);
+
+        kafkaService.broadcastPayload(username, text);
+
+        verify(kafkaTemplate, times(numNodes)).send(anyString(), anyString());
+        for (int i = 0; i < numNodes; i++) {
+            assertTrue(topicsBroadcastTo.contains(payloadTopicPrefix + i));
+        }
+
     }
 
 
