@@ -1,6 +1,6 @@
 ### Maven ###
 node/target
-multicast/target
+broadcast/target
 
 ### STS ###
 .apt_generated
