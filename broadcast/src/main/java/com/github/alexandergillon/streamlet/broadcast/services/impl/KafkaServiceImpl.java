@@ -41,6 +41,7 @@ public class KafkaServiceImpl implements KafkaService {
     @Override
     @KafkaListener(topics = "${streamlet.kafka.broadcast-topic.name}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.broadcast.models.BroadcastMessage"})
     public void processBroadcast(BroadcastMessage message) {
+        log.info(message.toString());
         switch (message.getMessageType()) {
             case "propose" -> broadcastProposal(message.getSender(), message.getMessage());
             case "vote" -> broadcastVote(message.getSender(), message.getMessage());
@@ -71,12 +72,12 @@ public class KafkaServiceImpl implements KafkaService {
      * @param proposer The sender of the proposal.
      * @param proposalJson The proposal message, as a JSON string.
      */
-    private void broadcastProposal(int proposer, String proposalJson) {
+    private void broadcastProposal(int proposer, JsonNode proposalJson) {
         verifyProposal(proposalJson);
 
         for (int i = 0; i < numNodes; i++) {
             if (i == proposer) continue;
-            kafkaTemplate.send(proposeTopicPrefix + i, proposalJson); // TODO: fault tolerance - check it got to broker
+            kafkaTemplate.send(proposeTopicPrefix + i, proposalJson.toString()); // TODO: fault tolerance - check it got to broker
         }
     }
 
@@ -86,29 +87,23 @@ public class KafkaServiceImpl implements KafkaService {
      *
      * @param proposalJson The proposal message, as a JSON string.
      */
-    private void verifyProposal(String proposalJson) {
-        try {
-            JsonNode json = objectMapper.readTree(proposalJson);
+    private void verifyProposal(JsonNode proposalJson) {
+        if (proposalJson.get("nodeId") == null ||
+                proposalJson.get("block") == null ||
+                proposalJson.at("/block/parentHash").isMissingNode() ||
+                proposalJson.at("/block/epoch").isMissingNode() ||
+                proposalJson.at("/block/payload").isMissingNode() ||
+                proposalJson.get("signature") == null) {
+            throw new IllegalArgumentException("Proposal message is not well-formed (has missing fields):" + proposalJson);
+        }
 
-            if (json.get("nodeId") == null ||
-                    json.get("block") == null ||
-                    json.at("/block/parentHash").isMissingNode() ||
-                    json.at("/block/epoch").isMissingNode() ||
-                    json.at("/block/payload").isMissingNode() ||
-                    json.get("signature") == null) {
-                throw new IllegalArgumentException("Proposal message is not well-formed (has missing fields):" + proposalJson);
-            }
-
-            if (!json.get("nodeId").isInt() ||
-                    !json.get("block").isObject() ||
-                    !json.at("/block/parentHash").isTextual() ||
-                    !json.at("/block/epoch").isInt() ||
-                    !json.at("/block/payload").isTextual() ||
-                    !json.get("signature").isTextual()) {
-                throw new IllegalArgumentException("Proposal message is not well-formed (has incorrect types):" + proposalJson);
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        if (!proposalJson.get("nodeId").isInt() ||
+                !proposalJson.get("block").isObject() ||
+                !proposalJson.at("/block/parentHash").isTextual() ||
+                !proposalJson.at("/block/epoch").isInt() ||
+                !proposalJson.at("/block/payload").isTextual() ||
+                !proposalJson.get("signature").isTextual()) {
+            throw new IllegalArgumentException("Proposal message is not well-formed (has incorrect types):" + proposalJson);
         }
     }
 
@@ -118,12 +113,12 @@ public class KafkaServiceImpl implements KafkaService {
      * @param voter The sender of the vote.
      * @param voteJson The vote message, as a JSON string.
      */
-    private void broadcastVote(int voter, String voteJson) {
+    private void broadcastVote(int voter, JsonNode voteJson) {
         verifyVote(voteJson);
 
         for (int i = 0; i < numNodes; i++) {
             if (i == voter) continue;
-            kafkaTemplate.send(voteTopicPrefix + i, voteJson); // TODO: fault tolerance - check it got to broker
+            kafkaTemplate.send(voteTopicPrefix + i, voteJson.toString()); // TODO: fault tolerance - check it got to broker
         }
     }
 
@@ -133,31 +128,25 @@ public class KafkaServiceImpl implements KafkaService {
      *
      * @param voteJson The vote message, as a JSON string.
      */
-    private void verifyVote(String voteJson) {
-        try {
-            JsonNode json = objectMapper.readTree(voteJson);
+    private void verifyVote(JsonNode voteJson) {
+        if (voteJson.get("nodeId") == null ||
+                voteJson.get("block") == null ||
+                voteJson.at("/block/parentHash").isMissingNode() ||
+                voteJson.at("/block/epoch").isMissingNode() ||
+                voteJson.at("/block/payload").isMissingNode() ||
+                voteJson.get("signature") == null ||
+                voteJson.get("proposerSignature") == null) {
+            throw new IllegalArgumentException("Vote message is not well-formed (has missing fields):" + voteJson);
+        }
 
-            if (json.get("nodeId") == null ||
-                    json.get("block") == null ||
-                    json.at("/block/parentHash").isMissingNode() ||
-                    json.at("/block/epoch").isMissingNode() ||
-                    json.at("/block/payload").isMissingNode() ||
-                    json.get("signature") == null ||
-                    json.get("proposerSignature") == null) {
-                throw new IllegalArgumentException("Vote message is not well-formed (has missing fields):" + voteJson);
-            }
-
-            if (!json.get("nodeId").isInt() ||
-                    !json.get("block").isObject() ||
-                    !json.at("/block/parentHash").isTextual() ||
-                    !json.at("/block/epoch").isInt() ||
-                    !json.at("/block/payload").isTextual() ||
-                    !json.get("signature").isTextual() ||
-                    !json.get("proposerSignature").isTextual()) {
-                throw new IllegalArgumentException("Vote message is not well-formed (has incorrect types):" + voteJson);
-            }
-        } catch (JsonProcessingException e) {
-            throw new RuntimeException(e);
+        if (!voteJson.get("nodeId").isInt() ||
+                !voteJson.get("block").isObject() ||
+                !voteJson.at("/block/parentHash").isTextual() ||
+                !voteJson.at("/block/epoch").isInt() ||
+                !voteJson.at("/block/payload").isTextual() ||
+                !voteJson.get("signature").isTextual() ||
+                !voteJson.get("proposerSignature").isTextual()) {
+            throw new IllegalArgumentException("Vote message is not well-formed (has incorrect types):" + voteJson);
         }
     }
 
