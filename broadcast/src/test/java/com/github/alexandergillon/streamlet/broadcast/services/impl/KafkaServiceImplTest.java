@@ -86,7 +86,7 @@ class KafkaServiceImplTest {
         };
 
         when(kafkaTemplate.send(anyString(), anyString())).thenAnswer(answer);
-        kafkaService.processBroadcast(new BroadcastMessage(sender, "propose", proposalMessage));
+        kafkaService.processBroadcast(new BroadcastMessage(sender, "propose", objectMapper.readTree(proposalMessage)));
 
         verify(kafkaTemplate, times(numNodes-1)).send(anyString(), anyString());
         for (int i = 0; i < numNodes; i++) {
@@ -125,7 +125,7 @@ class KafkaServiceImplTest {
         };
 
         when(kafkaTemplate.send(anyString(), anyString())).thenAnswer(answer);
-        kafkaService.processBroadcast(new BroadcastMessage(sender, "vote", voteMessage));
+        kafkaService.processBroadcast(new BroadcastMessage(sender, "vote", objectMapper.readTree(voteMessage)));
 
         verify(kafkaTemplate, times(numNodes-1)).send(anyString(), anyString());
         for (int i = 0; i < numNodes; i++) {
