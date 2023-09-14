@@ -7,7 +7,7 @@ import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBl
 import com.github.alexandergillon.streamlet.node.blockchain.impl.memory.InMemoryBlockchain;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
-import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.KafkaSendingService;
 import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import com.github.alexandergillon.streamlet.node.util.SerializationUtils;
 import jakarta.annotation.PostConstruct;
@@ -36,7 +36,7 @@ public class BlockchainServiceImpl implements BlockchainService {
     // Autowired dependencies (via RequiredArgsConstructor)
     private final CryptographyService cryptographyService;
     private final PayloadService payloadService;
-    private final KafkaService kafkaService;
+    private final KafkaSendingService kafkaSendingService;
 
     // Member variables
     private int currentEpoch = -1;
@@ -112,7 +112,7 @@ public class BlockchainServiceImpl implements BlockchainService {
         byte[] payload = payloadService.getNextPayload(unfinalizedSet);
 
         Block proposedBlock = new Block(parent.getHash(), currentEpoch, payload);
-        kafkaService.broadcast(SerializationUtils.buildProposeBroadcast(nodeId, proposedBlock, cryptographyService.signBase64(proposedBlock)));
+        kafkaSendingService.broadcast(SerializationUtils.buildProposeBroadcast(nodeId, proposedBlock, cryptographyService.signBase64(proposedBlock)));
     }
 
     /** Checks that the epoch has been set correctly, before other {@link BlockchainService} functions are called. */

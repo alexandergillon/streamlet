@@ -6,7 +6,8 @@ import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
-import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.KafkaListeningService;
+import com.github.alexandergillon.streamlet.node.services.KafkaSendingService;
 import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import com.github.alexandergillon.streamlet.node.util.SerializationUtils;
 import lombok.RequiredArgsConstructor;
@@ -14,33 +15,27 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.kafka.support.SendResult;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 
-/** Implementation of a {@link KafkaService}. */
+/** Implementation of a {@link KafkaListeningService}. */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 // If Kafka is enabled when unit testing, context will never come up because application cannot connect to broker
 @Profile("!unittests")
-public class KafkaServiceImpl implements KafkaService {
+public class KafkaListeningServiceImpl implements KafkaListeningService {
 
     // Constants from Spring properties
     @Value("${streamlet.node.id}")
     private int nodeId;
-    @Value("${streamlet.kafka.broadcast-topic.name}")
-    private String broadcastTopicName;
 
     // Autowired dependencies (via RequiredArgsConstructor)
     private final BlockchainService blockchainService;
     private final CryptographyService cryptographyService;
     private final PayloadService payloadService;
-    private final KafkaTemplate<String, String> kafkaTemplate;
+    private final KafkaSendingService kafkaSendingService;
 
     @Override
     @KafkaListener(topics = "payloadsForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.PayloadMessage"})
@@ -60,7 +55,7 @@ public class KafkaServiceImpl implements KafkaService {
         if (blockchainService.processProposedBlock(proposedBlock, message.getNodeId(), signature)) {
             String voteBroadcast = SerializationUtils.buildVoteBroadcast(nodeId, proposedBlock,
                     cryptographyService.signBase64(proposedBlock), message.getSignature());
-            broadcast(voteBroadcast);
+            kafkaSendingService.broadcast(voteBroadcast);
         }
     }
 
@@ -75,18 +70,6 @@ public class KafkaServiceImpl implements KafkaService {
         byte[] proposerSignature = Base64.getDecoder().decode(message.getProposerSignature());
 
         blockchainService.processBlockVote(block, message.getNodeId(), signature, proposerSignature);
-    }
-
-    @Override
-    public void broadcast(String message) {
-        CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(broadcastTopicName, message);
-        try {
-            // TODO: handle timeout
-            future.get(10, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            log.error("Exception while waiting for Kafka message to send.", e);
-            throw new RuntimeException(e);
-        }
     }
 
 }

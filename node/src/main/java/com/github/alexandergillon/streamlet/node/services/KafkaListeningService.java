@@ -4,8 +4,8 @@ import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 
-/** Service to handle communication with Kafka (consuming and producing messages). */
-public interface KafkaService {
+/** Service to handle listening to Kafka topics. */
+public interface KafkaListeningService {
 
     /**
      * Processes a payload message from Kafka. This method should be annotated with {@code @KafkaListener}
@@ -30,13 +30,5 @@ public interface KafkaService {
      * @param message The vote message from Kafka, to be processed.
      */
     void processVote(VoteMessage message);
-
-    /**
-     * Broadcasts a message to the broadcast topic in Kafka, to be picked up by the broadcast
-     * server and relayed to other nodes.
-     *
-     * @param message The message to broadcast.
-     */
-    void broadcast(String message);
 
 }

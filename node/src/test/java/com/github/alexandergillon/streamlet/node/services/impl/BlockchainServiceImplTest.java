@@ -7,7 +7,7 @@ import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
-import com.github.alexandergillon.streamlet.node.services.KafkaService;
+import com.github.alexandergillon.streamlet.node.services.KafkaSendingService;
 import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,7 +84,7 @@ class BlockchainServiceImplTest {
     private PayloadService payloadService;
 
     @MockBean
-    private KafkaService kafkaService;
+    private KafkaSendingService kafkaSendingService;
 
     @Autowired
     private BlockchainService blockchainService;
@@ -694,7 +694,7 @@ class BlockchainServiceImplTest {
         blockchainService.proposeBlock();
 
         ArgumentCaptor<String> broadcastString = ArgumentCaptor.forClass(String.class);
-        verify(kafkaService).broadcast(broadcastString.capture());
+        verify(kafkaSendingService).broadcast(broadcastString.capture());
 
         JsonNode jsonNode = objectMapper.readTree(broadcastString.getValue());
         assertEquals(jsonNode.get("sender").intValue(), nodeId);
@@ -747,7 +747,7 @@ class BlockchainServiceImplTest {
         blockchainService.proposeBlock();
 
         ArgumentCaptor<String> broadcastString = ArgumentCaptor.forClass(String.class);
-        verify(kafkaService).broadcast(broadcastString.capture());
+        verify(kafkaSendingService).broadcast(broadcastString.capture());
 
         JsonNode jsonNode = objectMapper.readTree(broadcastString.getValue());
         assertEquals(jsonNode.get("sender").intValue(), nodeId);
