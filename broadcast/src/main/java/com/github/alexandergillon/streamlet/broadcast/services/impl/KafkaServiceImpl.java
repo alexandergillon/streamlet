@@ -41,7 +41,6 @@ public class KafkaServiceImpl implements KafkaService {
     @Override
     @KafkaListener(topics = "${streamlet.kafka.broadcast-topic.name}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.broadcast.models.BroadcastMessage"})
     public void processBroadcast(BroadcastMessage message) {
-        log.info(message.toString());
         switch (message.getMessageType()) {
             case "propose" -> broadcastProposal(message.getSender(), message.getMessage());
             case "vote" -> broadcastVote(message.getSender(), message.getMessage());
