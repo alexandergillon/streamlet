@@ -1,16 +1,6 @@
 #!/bin/bash
 
-# Create out/ directory if it does not exist
-if [ ! -d "out" ]
-  then 
-    if [ -f "out" ]
-      then
-        echo File named \'out\' exists: remove so that \'out\' directory can be created.
-        exit 1
-      else
-        mkdir out || exit 1
-    fi
-fi 
+mkdir -p out || exit 1
 
 STREAMLET_BROADCAST_VERSION="0.0.1-SNAPSHOT"
 STREAMLET_BROADCAST_JAR_NAME="broadcast-$STREAMLET_BROADCAST_VERSION.jar"

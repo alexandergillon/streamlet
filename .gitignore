@@ -1,5 +1,6 @@
 ### Temporary Build Files ###
 docker/broadcast/out
+docker/node/out
 
 ### Maven ###
 node/target
@@ -35,5 +36,7 @@ build/
 
 ### Secrets ###
 node/src/main/resources/secrets.properties
+node/src/main/resources/secrets-local.properties
+node/src/main/resources/secrets-docker.properties
 node/src/main/resources/application-unittests.properties
 node/src/main/resources/keystore
