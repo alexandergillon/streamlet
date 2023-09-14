@@ -1,0 +1,1 @@
+docker run --init -e STREAMLET_PARTICIPANTS=5 alexandergillon/projects:broadcast 
