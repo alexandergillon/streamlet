@@ -17,7 +17,7 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic broadcastTopic() {
-        return TopicBuilder.name(broadcastTopicName).partitions(1).replicas(3).build();
+        return TopicBuilder.name(broadcastTopicName).partitions(1).replicas(1).build();
     }
 
 }

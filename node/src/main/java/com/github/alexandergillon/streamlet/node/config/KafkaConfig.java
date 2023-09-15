@@ -23,17 +23,17 @@ public class KafkaConfig {
 
     @Bean
     public NewTopic payloadTopic() {
-        return TopicBuilder.name(payloadTopicName).partitions(1).replicas(3).build();
+        return TopicBuilder.name(payloadTopicName).partitions(1).replicas(1).build();
     }
 
     @Bean
     public NewTopic proposalTopic() {
-        return TopicBuilder.name(proposalTopicName).partitions(1).replicas(3).build();
+        return TopicBuilder.name(proposalTopicName).partitions(1).replicas(1).build();
     }
 
     @Bean
     public NewTopic voteTopic() {
-        return TopicBuilder.name(voteTopicName).partitions(1).replicas(3).build();
+        return TopicBuilder.name(voteTopicName).partitions(1).replicas(1).build();
     }
 
 }
