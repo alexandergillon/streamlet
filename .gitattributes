@@ -1,0 +1,3 @@
+# Force shell scripts to have appropriate line endings - otherwise bash will complain
+*.bat eol=crlf
+*.sh eol=lf
