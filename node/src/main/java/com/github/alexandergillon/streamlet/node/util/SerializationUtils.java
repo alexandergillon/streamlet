@@ -6,12 +6,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import com.github.alexandergillon.streamlet.node.models.JsonBlock;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.List;
 
 /** Utility class to handle serialization / deserialization functionality. */
@@ -95,16 +98,38 @@ public class SerializationUtils {
     }
 
     /**
-     * Converts a list of blocks to its JSON representation. This is a JSON array literal with each member being a
-     * JsonBlock.
+     * Converts a list of blocks to a readable text version of the messages it contains.
      *
      * @param blockList A list of blocks.
-     * @return The JSON representation of that list of blocks.
+     * @return A readable text version of the messages the list of blocks contains.
      */
-    public static String blockListToJson(List<Block> blockList) {
+    public static String blockListMessagesToReadableText(List<Block> blockList) {
+        StringBuilder stringBuilder = new StringBuilder();
+        for (Block block : blockList) {
+            stringBuilder.append(new String(block.getPayload(), StandardCharsets.US_ASCII));
+            stringBuilder.append("\r\n");
+        }
+        return stringBuilder.toString();
+    }
+
+    /**
+     * Converts a list of blocks to its JSON representation. This is a JSON array literal with each member being a
+     * PayloadMessage.
+     *
+     * @param blockList A list of blocks.
+     * @return The JSON representation of the messages that the list of blocks contains.
+     */
+    public static String blockListMessagesToJson(List<Block> blockList) {
         try {
-            List<JsonBlock> jsonBlockList = blockList.stream().map(Block::toJsonBlock).toList();
-            return objectMapper.writeValueAsString(jsonBlockList);
+            List<PayloadMessage> jsonMessageList = blockList.stream().map(block -> {
+                try {
+                    return PayloadMessage.fromStringBytes(block.getPayload());
+                } catch (ParseException e) {
+                    log.error("ParseException", e);
+                    throw new RuntimeException(e);
+                }
+            }).toList();
+            return objectMapper.writeValueAsString(jsonMessageList);
         } catch (JsonProcessingException e) {
             log.error("JsonProcessingException", e);
             throw new RuntimeException(e);

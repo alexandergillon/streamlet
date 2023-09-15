@@ -5,11 +5,12 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.alexandergillon.streamlet.node.TestUtils;
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
-import com.github.alexandergillon.streamlet.node.models.JsonBlock;
+import com.github.alexandergillon.streamlet.node.models.PayloadMessage;
 import com.github.alexandergillon.streamlet.node.models.ProposeMessage;
 import com.github.alexandergillon.streamlet.node.models.VoteMessage;
 import org.junit.jupiter.api.Test;
 
+import java.text.ParseException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -82,31 +83,49 @@ class SerializationUtilsTest {
         assertEquals(proposerSignature, message.getProposerSignature());
     }
 
+    // Tests that block lists are correctly converted to text
+    @Test
+    public void testBlockListToReadableText() throws ParseException {
+        Block block0 = TestUtils.getRandomReadableBlock();
+        Block block1 = TestUtils.getRandomReadableBlock();
+        Block block2 = TestUtils.getRandomReadableBlock();
+        Block block3 = TestUtils.getRandomReadableBlock();
+        Block block4 = TestUtils.getRandomReadableBlock();
+
+        String text = SerializationUtils.blockListMessagesToReadableText(List.of(block0, block1, block2, block3, block4));
+        List<String> lines = text.lines().toList();
+        assertEquals(PayloadMessage.fromStringBytes(block0.getPayload()).toString(), lines.get(0));
+        assertEquals(PayloadMessage.fromStringBytes(block1.getPayload()).toString(), lines.get(1));
+        assertEquals(PayloadMessage.fromStringBytes(block2.getPayload()).toString(), lines.get(2));
+        assertEquals(PayloadMessage.fromStringBytes(block3.getPayload()).toString(), lines.get(3));
+        assertEquals(PayloadMessage.fromStringBytes(block4.getPayload()).toString(), lines.get(4));
+    }
+
     // Tests that block lists are correctly converted to JSON
     @Test
-    public void testBlockListToJson() throws JsonProcessingException {
-        Block block0 = TestUtils.getRandomBlock();
-        Block block1 = TestUtils.getRandomBlock();
-        Block block2 = TestUtils.getRandomBlock();
-        Block block3 = TestUtils.getRandomBlock();
-        Block block4 = TestUtils.getRandomBlock();
+    public void testBlockListToJson() throws JsonProcessingException, ParseException {
+        Block block0 = TestUtils.getRandomReadableBlock();
+        Block block1 = TestUtils.getRandomReadableBlock();
+        Block block2 = TestUtils.getRandomReadableBlock();
+        Block block3 = TestUtils.getRandomReadableBlock();
+        Block block4 = TestUtils.getRandomReadableBlock();
 
-        String json = SerializationUtils.blockListToJson(List.of(block0, block1, block2, block3, block4));
+        String json = SerializationUtils.blockListMessagesToJson(List.of(block0, block1, block2, block3, block4));
 
         JsonNode jsonNode = objectMapper.readTree(json);
         assertTrue(jsonNode.isArray());
 
-        JsonBlock jsonBlock0 = objectMapper.treeToValue(jsonNode.get(0), JsonBlock.class);
-        JsonBlock jsonBlock1 = objectMapper.treeToValue(jsonNode.get(1), JsonBlock.class);
-        JsonBlock jsonBlock2 = objectMapper.treeToValue(jsonNode.get(2), JsonBlock.class);
-        JsonBlock jsonBlock3 = objectMapper.treeToValue(jsonNode.get(3), JsonBlock.class);
-        JsonBlock jsonBlock4 = objectMapper.treeToValue(jsonNode.get(4), JsonBlock.class);
+        PayloadMessage jsonMessage0 = objectMapper.treeToValue(jsonNode.get(0), PayloadMessage.class);
+        PayloadMessage jsonMessage1 = objectMapper.treeToValue(jsonNode.get(1), PayloadMessage.class);
+        PayloadMessage jsonMessage2 = objectMapper.treeToValue(jsonNode.get(2), PayloadMessage.class);
+        PayloadMessage jsonMessage3 = objectMapper.treeToValue(jsonNode.get(3), PayloadMessage.class);
+        PayloadMessage jsonMessage4 = objectMapper.treeToValue(jsonNode.get(4), PayloadMessage.class);
 
-        assertEquals(jsonBlock0, block0.toJsonBlock());
-        assertEquals(jsonBlock1, block1.toJsonBlock());
-        assertEquals(jsonBlock2, block2.toJsonBlock());
-        assertEquals(jsonBlock3, block3.toJsonBlock());
-        assertEquals(jsonBlock4, block4.toJsonBlock());
+        assertEquals(jsonMessage0, PayloadMessage.fromStringBytes(block0.getPayload()));
+        assertEquals(jsonMessage1, PayloadMessage.fromStringBytes(block1.getPayload()));
+        assertEquals(jsonMessage2, PayloadMessage.fromStringBytes(block2.getPayload()));
+        assertEquals(jsonMessage3, PayloadMessage.fromStringBytes(block3.getPayload()));
+        assertEquals(jsonMessage4, PayloadMessage.fromStringBytes(block4.getPayload()));
     }
 
 }

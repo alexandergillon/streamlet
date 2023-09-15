@@ -15,10 +15,16 @@ public class BlockchainController {
     // Autowired dependencies (via RequiredArgsConstructor)
     private final BlockchainService blockchainService;
 
-    /** @return The finalized chain of the blockchain, as a JSON string. */
+    /** @return The finalized message chain of the blockchain, as readable text. */
+    @GetMapping(value = "/chain/readable", produces = MediaType.TEXT_PLAIN_VALUE)
+    public String getChainText() {
+         return SerializationUtils.blockListMessagesToReadableText(blockchainService.getFinalizedChain());
+    }
+
+    /** @return The finalized message chain of the blockchain, as a JSON string. */
     @GetMapping(value = "/chain/json", produces = MediaType.APPLICATION_JSON_VALUE)
     public String getChainJson() {
-        return SerializationUtils.blockListToJson(blockchainService.getFinalizedChain());
+        return SerializationUtils.blockListMessagesToJson(blockchainService.getFinalizedChain());
     }
 
 }

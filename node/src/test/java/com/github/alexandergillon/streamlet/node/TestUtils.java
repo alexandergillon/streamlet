@@ -35,6 +35,15 @@ public class TestUtils {
         return new Block(parentHash, epoch, payload);
     }
 
+    // Gets a random block with a readable payload
+    public static Block getRandomReadableBlock() {
+        byte[] parentHash = new byte[SHA_256_HASH_LENGTH_BYTES];
+        ThreadLocalRandom.current().nextBytes(parentHash);
+        int epoch = ThreadLocalRandom.current().nextInt(0, 1_000_000);
+
+        return new Block(parentHash, epoch, randomMessage().toStringBytes());
+    }
+
     // Gets a random block, with a specific parent hash
     public static Block getRandomBlockWithParent(byte[] parentHash) {
         if (parentHash.length != SHA_256_HASH_LENGTH_BYTES) throw new IllegalArgumentException("Parent hash is not SHA256.");
