@@ -111,6 +111,8 @@ public class BlockchainServiceImpl implements BlockchainService {
         Set<Block> unfinalizedSet = blockchain.getUnfinalizedAncestorSetOf(parent);
         byte[] payload = payloadService.getNextPayload(unfinalizedSet);
 
+        if (payload == null) return;
+
         Block proposedBlock = new Block(parent.getHash(), currentEpoch, payload);
         kafkaSendingService.broadcast(SerializationUtils.buildProposeBroadcast(nodeId, proposedBlock, cryptographyService.signBase64(proposedBlock)));
     }
