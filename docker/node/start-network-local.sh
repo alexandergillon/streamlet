@@ -10,7 +10,12 @@ fi
 
 STREAMLET_PARTICIPANTS=$1
 
+if ! [[ $STREAMLET_PARTICIPANTS =~ ^[0-9]+$ ]]; then
+    echo "Supplied number of participants is not a positive integer."
+    exit 1
+fi
+
 for (( i=0; i<STREAMLET_PARTICIPANTS; i++ )); do
-    ./docker-run-local.sh $i $STREAMLET_PARTICIPANTS $((8080+i+1)) localhost:9092 > logs/node$i.log &
+    ./docker-run-local.sh $i $STREAMLET_PARTICIPANTS $((8080+i+1)) 172.17.0.1:9092 > logs/node$i.log &
     echo "Started node $i"
 done
