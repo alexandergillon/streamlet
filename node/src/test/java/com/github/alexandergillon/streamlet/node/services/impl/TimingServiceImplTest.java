@@ -2,6 +2,7 @@ package com.github.alexandergillon.streamlet.node.services.impl;
 
 import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
+import com.github.alexandergillon.streamlet.node.services.TimingService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.stubbing.Answer;
@@ -9,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.Arrays;
 
@@ -18,8 +18,8 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.*;
 
 
-@SpringBootTest(properties = {"streamlet.testing.timing.enabled=true"})
-class TimingServiceTest {
+@SpringBootTest
+class TimingServiceImplTest {
 
     @MockBean
     private CryptographyService cryptographyService;
@@ -28,7 +28,7 @@ class TimingServiceTest {
     private BlockchainService blockchainService;
 
     @Autowired
-    private TimingService timingService;
+    private TimingService timingServiceImpl;
 
     @Value("${streamlet.epoch.duration}")
     private long epochDurationMillis;
@@ -75,7 +75,7 @@ class TimingServiceTest {
 
         // mock start time
         startTimeMillis = System.currentTimeMillis() + START_TIME_DELAY_MILLIS;
-        ReflectionTestUtils.setField(timingService, "startTimeMillis", startTimeMillis);
+        timingServiceImpl.setStartTime(startTimeMillis);
     }
 
     // Tests normal timing behavior: epoch is set in time for entire duration
