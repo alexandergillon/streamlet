@@ -2,11 +2,13 @@ package com.github.alexandergillon.streamlet.node.blockchain.impl;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.Set;
 
 /** Stores a block, and information about it (such as voters on the block, whether the block is notarized/finalized, etc.). */
+@Slf4j
 public class BlockInfo {
 
     /** The block whose information we are tracking. */
@@ -61,6 +63,7 @@ public class BlockInfo {
 
     /** Notarizes this block. */
     public void notarize() {
+        log.info("Notarized block: {}", block.toString());
         notarized = true;
     }
 
@@ -74,6 +77,7 @@ public class BlockInfo {
      * {@code finalize()} as this method is already implemented by {@code Object}.
      */
     public void finalizeBlock() {
+        log.info("Finalized block: {}", block.toString());
         notarized = true;
         finalized = true;
     }

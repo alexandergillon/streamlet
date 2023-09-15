@@ -40,12 +40,14 @@ public class KafkaListeningServiceImpl implements KafkaListeningService {
     @Override
     @KafkaListener(topics = "payloadsForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.PayloadMessage"})
     public void processPayload(PayloadMessage message) {
+        log.info("Received proposed payload from user {}: {}", message.getUsername(), message.getText());
         payloadService.addPendingMessage(message);
     }
 
     @Override
     @KafkaListener(topics = "proposalsForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.ProposeMessage"})
     public void processProposal(ProposeMessage message) {
+        log.info("Received proposed block from node {}: {}", message.getNodeId(), message.getBlock().toString());
         byte[] parentHash = Base64.getDecoder().decode(message.getBlock().getParentHash());
         byte[] payload = Base64.getDecoder().decode(message.getBlock().getPayload());
         Block proposedBlock = new Block(parentHash, message.getBlock().getEpoch(), payload);
@@ -62,6 +64,7 @@ public class KafkaListeningServiceImpl implements KafkaListeningService {
     @Override
     @KafkaListener(topics = "votesForNode" + "${streamlet.node.id}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.node.models.VoteMessage"})
     public void processVote(VoteMessage message) {
+        log.info("Received vote on block from node {}: {}", message.getNodeId(), message.getBlock().toString());
         byte[] parentHash = Base64.getDecoder().decode(message.getBlock().getParentHash());
         byte[] payload = Base64.getDecoder().decode(message.getBlock().getPayload());
         Block block = new Block(parentHash, message.getBlock().getEpoch(), payload);

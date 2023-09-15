@@ -4,6 +4,7 @@ import com.github.alexandergillon.streamlet.node.services.BlockchainService;
 import com.github.alexandergillon.streamlet.node.services.CryptographyService;
 import com.github.alexandergillon.streamlet.node.services.TimingService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 @EnableScheduling
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class TimingServiceImpl implements TimingService {
 
     // Constants from Spring properties
@@ -51,6 +53,7 @@ public class TimingServiceImpl implements TimingService {
 
         int epoch = (int) ((currentTimeMillis - startTimeMillis) / epochDurationMillis);
         if (epoch != lastEpoch) {
+            log.info("Beginning epoch {}", epoch);
             blockchainService.setEpoch(epoch);
             lastEpoch = epoch;
 

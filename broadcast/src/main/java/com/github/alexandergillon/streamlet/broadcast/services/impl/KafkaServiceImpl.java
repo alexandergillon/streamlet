@@ -41,6 +41,7 @@ public class KafkaServiceImpl implements KafkaService {
     @Override
     @KafkaListener(topics = "${streamlet.kafka.broadcast-topic.name}", properties = {"spring.json.value.default.type=com.github.alexandergillon.streamlet.broadcast.models.BroadcastMessage"})
     public void processBroadcast(BroadcastMessage message) {
+        log.info("Received broadcast of type {} from {}: {}", message.getMessageType(), message.getSender(), message.getMessage().toString());
         switch (message.getMessageType()) {
             case "propose" -> broadcastProposal(message.getSender(), message.getMessage());
             case "vote" -> broadcastVote(message.getSender(), message.getMessage());
@@ -56,6 +57,7 @@ public class KafkaServiceImpl implements KafkaService {
         try {
             PayloadMessage message = new PayloadMessage(username, text, System.currentTimeMillis());
             String json = objectMapper.writeValueAsString(message);
+            log.info("Broadcasting message from {} with text {} to nodes", username, text);
             for (int i = 0; i < numNodes; i++) {
                 kafkaTemplate.send(payloadTopicPrefix + i, json);  // TODO: fault tolerance - check it got to broker
             }

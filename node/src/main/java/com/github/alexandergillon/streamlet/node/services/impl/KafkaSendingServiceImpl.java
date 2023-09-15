@@ -26,6 +26,7 @@ public class KafkaSendingServiceImpl implements KafkaSendingService {
 
     @Override
     public void broadcast(String message) {
+        log.info("Broadcasting {}", message);
         CompletableFuture<SendResult<String, String>> future = kafkaTemplate.send(broadcastTopicName, message);
         try {
             // TODO: handle timeout
