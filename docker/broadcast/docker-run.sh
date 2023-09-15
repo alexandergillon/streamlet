@@ -1,4 +1,8 @@
-STREAMLET_PARTICIPANTS=5
+#!/bin/bash
+
+STREAMLET_PARTICIPANTS=10
+
+docker container prune -f
 
 docker run --init \
 -e STREAMLET_PARTICIPANTS=$STREAMLET_PARTICIPANTS \

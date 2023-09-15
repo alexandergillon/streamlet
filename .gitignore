@@ -1,6 +1,7 @@
-### Temporary Build Files ###
+### Temporary Build & Run Files ###
 docker/broadcast/out
 docker/node/out
+docker/node/logs
 
 ### Maven ###
 node/target

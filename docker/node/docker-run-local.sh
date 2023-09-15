@@ -2,21 +2,26 @@
 
 # This script runs a node container with Docker network in 'host' mode. Spring Boot server runs on STREAMLET_NODE_PORT.
 
-if [ "$#" -ne 3 ]; then
+if [ "$#" -ne 4 ]; then
     echo "Incorrect number of arguments."
-    echo "usage: docker-run-local.sh <NODE-ID> <PORT> <KAFKA-BOOTSTRAP-SERVERS>"
+    echo "usage: docker-run-local.sh <NODE-ID> <# PARTICIPANTS> <PORT> <KAFKA-BOOTSTRAP-SERVERS>"
     exit 1
 fi
 
-STREAMLET_PARTICIPANTS=5
 STREAMLET_EPOCH_DURATION=2000
 
 STREAMLET_NODE_ID=$1
-STREAMLET_NODE_PORT=$2
-STREAMLET_KAFKA_BOOTSTRAP_SERVERS=$3
+STREAMLET_PARTICIPANTS=$2
+STREAMLET_NODE_PORT=$3
+STREAMLET_KAFKA_BOOTSTRAP_SERVERS=$4
 
 if ! [[ $STREAMLET_NODE_ID =~ ^[0-9]+$ ]]; then
     echo "Supplied node ID is not a positive integer."
+    exit 1
+fi
+
+if ! [[ $STREAMLET_PARTICIPANTS =~ ^[0-9]+$ ]]; then
+    echo "Supplied number of participants is not a positive integer."
     exit 1
 fi
 
@@ -39,6 +44,8 @@ if (( $STREAMLET_NODE_PORT > 65535 )); then
     echo "Supplied port is out of range (> 65535)."
     exit 1
 fi
+
+docker container prune -f
 
 docker run --init \
 -e STREAMLET_PARTICIPANTS=$STREAMLET_PARTICIPANTS \
