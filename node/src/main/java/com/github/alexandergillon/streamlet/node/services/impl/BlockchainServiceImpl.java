@@ -49,7 +49,7 @@ public class BlockchainServiceImpl implements BlockchainService {
      */
     @PostConstruct
     private void initializeBlockchain() {
-        blockchain = new InMemoryBlockchain(nodeId, (int)Math.ceil(numNodes * notarizationProportion));
+        blockchain = new InMemoryBlockchain(nodeId, (int)Math.ceil(numNodes * notarizationProportion), payloadService);
     }
 
     @Override

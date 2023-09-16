@@ -155,7 +155,7 @@ class InMemoryBlockchainTest {
     // Tests ideal behavior (message delivery is in-order, on time, and no forking of the chain).
     @Test
     public void testIdealBehavior() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e1:
@@ -253,19 +253,19 @@ class InMemoryBlockchainTest {
     @Test
     public void testReturnValues() throws InvalidBlockException, UnknownBlockException {
         // valid proposal, should vote
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         assertTrue(blockchain.processProposedBlock(blocks.get(1), 1, 1, true));
 
         // not first proposal of epoch, shouldn't vote
-        blockchain = new InMemoryBlockchain(0, 4);
+        blockchain = new InMemoryBlockchain(0, 4, null);
         assertFalse(blockchain.processProposedBlock(blocks.get(1), 1, 1, false));
 
         // proposal is from previous epoch, shouldn't vote
-        blockchain = new InMemoryBlockchain(0, 4);
+        blockchain = new InMemoryBlockchain(0, 4, null);
         assertFalse(blockchain.processProposedBlock(blocks.get(1), 1, 2, true));
 
         // proposal does not extend longest notarized chain
-        blockchain = new InMemoryBlockchain(0, 4);
+        blockchain = new InMemoryBlockchain(0, 4, null);
         doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
         // This setup gets blocks 11 and 16 notarized
         String moreSetup =
@@ -289,7 +289,7 @@ class InMemoryBlockchainTest {
     // Tests that blocks are not finalized if the three notarized blocks in a row are not of consecutive epochs
     @Test
     public void testMissedEpoch() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e1:
@@ -349,7 +349,7 @@ class InMemoryBlockchainTest {
     // is still making progress, but this node is hearing about it late
     @Test
     public void testNetworkDelay() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e2:
@@ -421,7 +421,7 @@ class InMemoryBlockchainTest {
     // Test a scenario in which a fork occurs, due to network instability. Only one branch should be finalized
     @Test
     public void testFork() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
         String test = first7BlocksIdealNetworkNotarizationThreshold4 +
                 """
@@ -500,7 +500,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain is not reliant on a specific notarization order
     @Test
     public void testNotarizationOrder() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e1:
@@ -536,7 +536,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain is not reliant on a specific notarization order
     @Test
     public void testNotarizationOrder2() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e1:
@@ -572,7 +572,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain is not reliant on a specific notarization order
     @Test
     public void testNotarizationOrder3() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
             """
             e1:
@@ -658,7 +658,7 @@ class InMemoryBlockchainTest {
     // Tests that a block that was not notarized still becomes finalized if later in the chain becomes finalized
     @Test
     public void testSkippedBlockFinalization() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
                 """
                 e1:
@@ -708,7 +708,7 @@ class InMemoryBlockchainTest {
     // Tests that if a node misses a proposal but gets all the votes on that proposal, a block is still notarized
     @Test
     public void testMissedProposalMessages() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test =
                 """
                 e1:
@@ -812,7 +812,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain
     @Test
     public void testLongestNotarizedChainTail() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test = """
             assert longestnotarizedtail b0
             e1:
@@ -872,7 +872,7 @@ class InMemoryBlockchainTest {
     // multiple unnotarized proposals chaining off each other
     @Test
     public void testLongestNotarizedChainTailMutlipleUnnotarized() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         String test = """
             assert longestnotarizedtail b0
             e1:
@@ -913,7 +913,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain correctly gives us the tail of the longest notarized chain in the blockchain, even with forking
     @Test
     public void testLongestNotarizedChainTailFork() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
         String test = first7BlocksIdealNetworkNotarizationThreshold4 +
                 """
@@ -975,7 +975,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain correctly gives us unfinalized sets
     @Test
     public void testUnfinalizedSet() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         assertTrue(blockchain.getUnfinalizedAncestorSetOf(blocks.get(0)).isEmpty());
         String part1 = """
             e1:
@@ -1023,7 +1023,7 @@ class InMemoryBlockchainTest {
     // Tests that the blockchain correctly gives us unfinalized sets, even with forking
     @Test
     public void testUnfinalizedSetFork() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         // Voting patterns as seen below are possible if (for whatever reason) vote messages are sufficiently delayed at the right points
         doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
         String part1 =
@@ -1109,7 +1109,7 @@ class InMemoryBlockchainTest {
     // Tests that correct exceptions are thrown when a bad propose occurs
     @Test
     public void testBadPropose() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
         assertThrows(UnknownBlockException.class, () -> blockchain.processProposedBlock(blocks.get(25), 1, 100, true));
         assertThrows(UnknownBlockException.class, () -> blockchain.processBlockVote(blocks.get(25), 1));
@@ -1118,7 +1118,7 @@ class InMemoryBlockchainTest {
     // Tests that correct exceptions are thrown when a bad vote occurs
     @Test
     public void testBadVote() {
-        Blockchain blockchain = new InMemoryBlockchain(0, 4);
+        Blockchain blockchain = new InMemoryBlockchain(0, 4, null);
         doTest(first7BlocksIdealNetworkNotarizationThreshold4, blockchain);
         assertThrows(UnknownBlockException.class, () -> blockchain.processBlockVote(blocks.get(25), 1));
     }

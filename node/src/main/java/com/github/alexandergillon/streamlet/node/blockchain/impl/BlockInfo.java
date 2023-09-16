@@ -1,6 +1,7 @@
 package com.github.alexandergillon.streamlet.node.blockchain.impl;
 
 import com.github.alexandergillon.streamlet.node.blockchain.Block;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -75,11 +76,15 @@ public class BlockInfo {
     /**
      * Finalizes this block. Also notarizes it, as finalization implies notarization. This isn't called
      * {@code finalize()} as this method is already implemented by {@code Object}.
+     *
+     * @param payloadService Any payload service that is interested in the finalization of a block. If this argument
+     *                       is not null, this payload service will be informed that this block has been finalized.
      */
-    public void finalizeBlock() {
+    public void finalizeBlock(PayloadService payloadService) {
         log.info("Finalized block: {}", block.toString());
         notarized = true;
         finalized = true;
+        if (payloadService != null) payloadService.finalizedPayload(block.getPayload());
     }
 
     /** @return Whether this block is finalized. */

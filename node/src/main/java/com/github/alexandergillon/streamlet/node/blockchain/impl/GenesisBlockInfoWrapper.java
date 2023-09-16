@@ -8,7 +8,7 @@ public class GenesisBlockInfoWrapper extends BlockInfo {
     public GenesisBlockInfoWrapper() {
         super(Block.GENESIS_BLOCK);
         super.notarize();
-        super.finalizeBlock();
+        super.finalizeBlock(null);
     }
 
     @Override

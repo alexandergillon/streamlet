@@ -7,6 +7,7 @@ import com.github.alexandergillon.streamlet.node.blockchain.exceptions.InvalidBl
 import com.github.alexandergillon.streamlet.node.blockchain.exceptions.UnknownBlockException;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockInfo;
 import com.github.alexandergillon.streamlet.node.blockchain.impl.BlockTree;
+import com.github.alexandergillon.streamlet.node.services.PayloadService;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,21 +23,28 @@ public class InMemoryBlockchain implements Blockchain {
      * possibility of conflicting un-finalized blocks in the blockchain).
      */
     private final BlockTree root = InMemoryBlockTree.GENESIS_BLOCK_TREE();
+
     /** Node id of this node in the network. */
     private final int networkNodeId;
+
     /** Threshold for a block to be notarized. */
     private final int notarizationThreshold;
+
     /** Reference to the latest (in terms of epoch number) block that has been finalized in the blockchain. */
     private BlockTree latestFinalizedBlock = root;  // TODO: use
+
+    /** {@link PayloadService} which is interested in finalization of payloads. */
+    private final PayloadService payloadService;
 
     /**
      * Constructor.
      *
      * @param networkNodeId The id of this node in the network.
      */
-    public InMemoryBlockchain(int networkNodeId, int notarizationThreshold) {
+    public InMemoryBlockchain(int networkNodeId, int notarizationThreshold, PayloadService payloadService) {
         this.networkNodeId = networkNodeId;
         this.notarizationThreshold = notarizationThreshold;
+        this.payloadService = payloadService;
     }
 
     @Override
@@ -252,12 +260,12 @@ public class InMemoryBlockchain implements Blockchain {
      * @param node The node to finalize the prefix chain (includes the node itself).
      */
     private void finalizePrefixChain(BlockTree node) {
-        node.getBlockInfo().finalizeBlock();
+        node.getBlockInfo().finalizeBlock(payloadService);
         while (true) {
             BlockTree parent = node.getParent();
             if (parent == null) return;
             if (parent.getBlockInfo().isFinalized()) return;
-            parent.getBlockInfo().finalizeBlock();
+            parent.getBlockInfo().finalizeBlock(payloadService);
             node = parent;
         }
     }

@@ -55,7 +55,7 @@ class BlockInfoTest {
         assertTrue(blockInfo1.isNotarized());
         assertFalse(blockInfo1.isFinalized());
 
-        blockInfo1.finalizeBlock();
+        blockInfo1.finalizeBlock(null);
 
         assertTrue(blockInfo1.isNotarized());
         assertTrue(blockInfo1.isFinalized());
@@ -66,7 +66,7 @@ class BlockInfoTest {
         assertFalse(blockInfo2.isNotarized());
         assertFalse(blockInfo2.isFinalized());
 
-        blockInfo2.finalizeBlock();
+        blockInfo2.finalizeBlock(null);
 
         // finalization implies notarization
         assertTrue(blockInfo2.isNotarized());
