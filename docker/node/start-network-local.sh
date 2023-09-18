@@ -17,6 +17,7 @@ fi
 
 rm logs/* || exit 1
 
+# 172.17.0.1 is the address of the host machine of a Docker conatiner
 for (( i=0; i<STREAMLET_PARTICIPANTS; i++ )); do
     ./docker-run.sh $i $STREAMLET_PARTICIPANTS $((8080+i+1)) 172.17.0.1:9092 > logs/node$i.log &
     echo "Started node $i"
