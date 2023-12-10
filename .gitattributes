@@ -1,3 +1,6 @@
 # Force shell scripts to have appropriate line endings - otherwise bash will complain
 *.bat eol=crlf
 *.sh eol=lf
+
+# Ignore bundled copy of Kafka for calculating language statistics
+docker/kafka/kafka/**

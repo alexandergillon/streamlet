@@ -1,5 +1,3 @@
-NOTE: this repository comes with a bundled copy of Apache Kafka. As a result, the Github language statistics are not particularly accurate. My code is probably 95% Java, 5% shell.
-
 # Streamlet
 
 An implementation of the Streamlet blockchain protocol. The Streamlet protocol, presented [here](https://eprint.iacr.org/2020/088) by Benjamin Chan and Elaine Shi, is a Byzantine fault-tolerant distributed consensus protocol for a permissioned blockchain. It emphasizes simplicity and is meant to be understandable for those without any experience with blockchains.
