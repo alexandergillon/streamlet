@@ -3,4 +3,4 @@
 *.sh eol=lf
 
 # Ignore bundled copy of Kafka for calculating language statistics
-streamlet/docker/kafka/kafka/** linguist-vendored
+docker/kafka/kafka/** linguist-vendored
